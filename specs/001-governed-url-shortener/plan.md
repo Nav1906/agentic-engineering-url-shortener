@@ -223,7 +223,10 @@ a join; that is the fundamental execution model, not deferred.
 ## 4. State and Decision Lineage
 
 Preserved via: `orchestration_workflow_instance`/`_stage` (workflow state),
-`decision_lineage` (append-only, FR-503), `orchestration_approval_decision`
+`orchestration_decision_lineage` (append-only, FR-503; corrected from the
+stale short name `decision_lineage` during `/speckit-analyze` remediation,
+2026-09-10 — see data-model.md, the authoritative source for this table
+name), `orchestration_approval_decision`
 (approvals/rejections, revision-bound), `audit_events` (everything else:
 retries, replanning, terminal status). Normalized requirements/task
 decomposition/artifact versions are tracked via `feature_ref` and
@@ -576,10 +579,20 @@ tests/
 ├── unit/
 ├── contract/
 ├── integration/
-├── orchestration/
-├── reliability/
+├── orchestration/    # includes reliability: retry/timeout/fallback/rollback/safe-stop (ADR-0007) — see §10 note below
+├── persistence/
+├── policy/
+├── observability/
 ├── analytics/
-└── security/
+├── security/
+└── e2e/
+
+# Reconciled with tasks.md during `/speckit-analyze` remediation (2026-09-10,
+# finding F3): the prior listing above (reliability/ as a standalone
+# directory; no persistence/, policy/, observability/, or e2e/) didn't match
+# tasks.md's actual paths in either direction. §10's "Reliability" test-type
+# row (retry/timeout/fallback/rollback-or-compensation/safe-stop) lives under
+# tests/orchestration/ — there is no separate tests/reliability/ directory.
 
 scripts/
 ├── bootstrap_credentials.py   # ADR-0006
