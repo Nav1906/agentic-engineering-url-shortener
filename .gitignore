@@ -15,3 +15,19 @@
 # never commit these. Drop such files under one of these local-only paths.
 /confidential/
 /private/
+
+# Python (ADR-0002)
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Runtime SQLite database (ADR-0003, ADR-0010) — created on first run
+/data/
+
+# ADR-0006 blocked-scope directory (T100-T103) — never populated until an
+# ADR-0006 replacement is accepted, but gitignored in advance regardless
+/local-secrets/
