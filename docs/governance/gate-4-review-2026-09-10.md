@@ -283,3 +283,23 @@ was wrong. Classified as a **PATCH-level governance correction**, not a
 FR-306 material change. Applied directly to the working tree alongside the
 FR-117 amendment above; **not yet committed** — presented in the git diff
 below for your review before any commit.
+
+## Sequencing Decision — Timebox Prioritization (2026-09-10)
+
+Given the assignment's 2–3 day timebox and that a **working prototype**
+had not yet been started after the plan/ADR review, the human candidate
+was presented with two options: (a) keep pursuing Option A (ADR-0006) to
+a full PASS before writing any code, or (b) proceed to
+`/speckit-checklist` → `/speckit-tasks` → implementation now, carrying
+Option A forward as a documented, in-progress risk.
+
+**Decision: (b).** ADR-0006 remains **Rejected**, not Accepted — this
+sequencing decision does not change that. Its unresolved state is carried
+forward explicitly as a disclosed, accepted risk, consistent with the
+`READY WITH ACCEPTED LIMITATIONS` release-readiness outcome (plan.md §
+Planning Constraints) — it is a candidate for that outcome specifically
+because it is disclosed, not because it is resolved or waived. Also
+practically necessary: this session cannot execute Option A's privileged
+(`sudo`) commands itself (no interactive TTY/credential available), so
+further progress on ADR-0006 requires the human candidate's own terminal
+regardless of sequencing choice.
