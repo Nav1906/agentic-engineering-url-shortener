@@ -1,5 +1,5 @@
 """T014: scheme allow-list + expiry validation (FR-101, FR-114)."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -35,7 +35,7 @@ def test_rejects_disallowed_or_malformed_schemes(url):
 
 
 def test_validate_expires_at_accepts_future_timestamp():
-    future = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    future = (datetime.now(UTC) + timedelta(days=1)).isoformat()
     validate_expires_at(future)
 
 
@@ -44,7 +44,7 @@ def test_validate_expires_at_accepts_none():
 
 
 def test_validate_expires_at_rejects_past_timestamp():
-    past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    past = (datetime.now(UTC) - timedelta(days=1)).isoformat()
     with pytest.raises(ValidationError):
         validate_expires_at(past)
 

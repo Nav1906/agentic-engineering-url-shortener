@@ -1,5 +1,5 @@
 """T011: domain_short_link table + model."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -56,7 +56,7 @@ def test_delete_nonexistent_returns_false(conn):
 
 
 def test_expired_link_is_expired_property(conn):
-    past = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
+    past = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
     # Bypass validate_expires_at (which requires future) by inserting directly,
     # simulating a link that has since passed its expiry.
     conn.execute(

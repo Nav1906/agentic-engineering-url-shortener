@@ -1,12 +1,9 @@
-"""T021: kill mid-workflow, confirm state intact. Written test-first; xfail
-until Group 17 (T059 reaper) + T077 (restart recovery routine) land, per
-tasks.md's explicit design (a task written early, satisfied later — same
-pattern as this project's own reconciliation work).
-"""
-import pytest
+"""T021 (satisfied by T077): kill mid-workflow, confirm state intact.
+Originally written test-first and marked xfail pending T059 (Group 17) +
+T077 (Group 24); T077's recover_on_startup now exists and this test
+genuinely passes — xfail marker removed accordingly (2026-09-10)."""
 
 
-@pytest.mark.xfail(reason="depends on T059 (Group 17) + T077 (Group 24), not yet implemented", strict=False)
 def test_running_stage_forced_to_failed_transient_on_restart(tmp_path, monkeypatch):
     import src.persistence.db as db_module
 
@@ -14,7 +11,7 @@ def test_running_stage_forced_to_failed_transient_on_restart(tmp_path, monkeypat
     conn = db_module.get_connection()
     db_module.init_schema(conn)
 
-    from src.orchestration.scheduler import recover_on_startup  # not yet implemented
+    from src.orchestration.scheduler import recover_on_startup
 
     conn.execute(
         "INSERT INTO orchestration_workflow_instance VALUES (?,?,?,?,?,?)",

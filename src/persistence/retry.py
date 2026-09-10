@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import sqlite3
 import time
-from typing import Callable, TypeVar
-
-T = TypeVar("T")
+from collections.abc import Callable
 
 MAX_ATTEMPTS = 3
 BACKOFF_SECONDS = (1, 2)
@@ -19,7 +17,7 @@ class RetryExhausted(RuntimeError):
     """Raised when all MAX_ATTEMPTS attempts hit SQLITE_BUSY/SQLITE_LOCKED."""
 
 
-def with_bounded_retry(
+def with_bounded_retry[T](
     fn: Callable[[], T],
     sleep: Callable[[float], None] = time.sleep,
 ) -> T:

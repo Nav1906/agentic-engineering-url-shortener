@@ -3,7 +3,7 @@ import sqlite3
 
 import pytest
 
-from src.persistence.retry import MAX_ATTEMPTS, BACKOFF_SECONDS, RetryExhausted, with_bounded_retry
+from src.persistence.retry import BACKOFF_SECONDS, MAX_ATTEMPTS, RetryExhausted, with_bounded_retry
 
 
 def test_succeeds_on_first_attempt_without_sleeping():

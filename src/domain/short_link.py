@@ -5,7 +5,7 @@ import secrets
 import sqlite3
 import string
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from src.domain.validation import validate_destination_url, validate_expires_at
 
@@ -31,8 +31,8 @@ class ShortLink:
     def is_expired(self) -> bool:
         if self.expires_at is None:
             return False
-        expires = datetime.fromisoformat(self.expires_at.replace("Z", "+00:00"))
-        return datetime.now(timezone.utc) >= expires
+        expires = datetime.fromisoformat(self.expires_at)
+        return datetime.now(UTC) >= expires
 
 
 def _generate_code(alphabet: str = _ALPHABET, length: int = CODE_LENGTH) -> str:
@@ -51,7 +51,7 @@ def create_short_link(
     validate_destination_url(destination_url)
     validate_expires_at(expires_at)
 
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = datetime.now(UTC).isoformat()
     for _ in range(MAX_COLLISION_RETRIES):
         code = _generate_code(alphabet=alphabet)
         try:
@@ -90,7 +90,7 @@ def get_short_link(conn: sqlite3.Connection, short_code: str) -> ShortLink | Non
 
 
 def delete_short_link(conn: sqlite3.Connection, short_code: str) -> bool:
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     cur = conn.execute(
         "UPDATE domain_short_link SET status='deleted', deleted_at=? "
         "WHERE short_code=? AND status='active'",

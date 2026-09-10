@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 MIN_KEY_LENGTH = 16  # plan.md §8: caller's responsibility beyond this floor
 
@@ -72,7 +72,7 @@ def record(
     short_code: str,
 ) -> None:
     payload_hash = _hash_payload(destination_url, expires_at)
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = datetime.now(UTC).isoformat()
     conn.execute(
         "INSERT INTO domain_idempotency_record "
         "(idempotency_key, validated_payload_hash, short_code, created_at) "

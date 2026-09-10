@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import ipaddress
 import socket
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 ALLOWED_SCHEMES = {"https", "http"}
@@ -44,7 +44,7 @@ def _reject_private_or_internal_address(hostname: str | None) -> None:
     except ValueError:
         try:
             infos = socket.getaddrinfo(hostname, None)
-            candidates.extend(info[4][0] for info in infos)
+            candidates.extend(str(info[4][0]) for info in infos)
         except socket.gaierror:
             # Unresolvable at creation time is not itself a rejection reason
             # here (it may become resolvable later); scheme/hostname-shape
@@ -64,10 +64,10 @@ def validate_expires_at(expires_at: str | None) -> None:
     if expires_at is None:
         return
     try:
-        parsed = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(expires_at)
     except (ValueError, AttributeError) as exc:
         raise ValidationError(f"expiresAt is not a valid ISO-8601 timestamp: {expires_at!r}") from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    if parsed <= datetime.now(timezone.utc):
+        parsed = parsed.replace(tzinfo=UTC)
+    if parsed <= datetime.now(UTC):
         raise ValidationError("expiresAt must be strictly in the future")
