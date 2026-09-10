@@ -6,8 +6,10 @@
 
 **Status**: **APPROVED** (Human Requirements Approval, per the guide's Final
 Lifecycle, satisfying Human Gates 2 and 3). Approved 2026-09-10 by the human
-candidate acting under the reviewer/approver role (Constitution FR-312). See
-"Approval Record" below.
+candidate acting under the reviewer/approver role (per spec.md FR-312).
+**Amended 2026-09-10** during Human Gate 4 architecture review (added
+FR-117; corrected two citation errors) — see "Approval Record" and "Human
+Gate 4 Amendment Record" below.
 
 **Input**: The confidential AI Native SDLC guide (`./confidential/AI Native SDLC - User Guide.docx`), Section 7 "Prompt 2: Feature Specification", combined with the human candidate's instruction to define testable requirements for URL-shortener domain behavior, stateful SDLC orchestration, human/policy governance, reliability and audit mechanisms, and three required scenarios (greenfield, brownfield, ambiguous requirement).
 
@@ -17,7 +19,7 @@ candidate acting under the reviewer/approver role (Constitution FR-312). See
 
 **Human Requirements Approval** (satisfying the guide's Human Gate 2 and Human
 Gate 3) was granted by the human candidate, acting under the reviewer/approver
-role (Constitution FR-312), on **2026-09-10**.
+role (per spec.md FR-312), on **2026-09-10**.
 
 This approval covers the specification as clarified: the original draft (Human
 Gate 2), the five-question clarification session and its integration (Human Gate
@@ -43,6 +45,45 @@ to git immediately following this record — the commit hash of that commit is t
 authoritative revision identifier. A material change to this specification after
 that commit invalidates this approval and requires re-approval, exactly as
 FR-311/FR-501/FR-502 require for any other approved artifact.
+
+## Human Gate 4 Amendment Record
+
+Per FR-311/FR-501/FR-502 above: this amendment is exactly the "material
+change requires re-approval" case those rules describe, applied to this
+specification itself — not a new Human Requirements Approval, a scoped
+amendment approved during Human Gate 4 architecture review.
+
+**Change**: added **FR-117** (system-wide analytics integrity signal,
+`degraded_since_unclean_shutdown_at`), approved by the human candidate on
+**2026-09-10**, with these explicit semantics as directed: sticky after an
+unclean shutdown; operator acknowledgment may clear the forward-looking
+warning only; acknowledgment never restores or asserts historical
+completeness; historical uncertainty remains visible in analytics
+evidence. Also corrected two citation errors in this file's Approval
+Record (`Constitution FR-312` → `per spec.md FR-312`, lines 8 and 20) —
+non-substantive, no change in meaning, previously identified and proposed
+at Human Gate 4 Round 2/3 review, applied only now on explicit approval.
+
+**Impact classification (FR-306)**: additive — a new requirement (FR-117)
+is added; no existing approved requirement (FR-101–FR-116, FR-201 onward)
+is modified, weakened, or removed. This elaborates FR-107's "at least
+`complete` or `degraded`" contract (already explicitly written to permit
+elaboration) with a system-wide signal alongside the existing per-code
+states. Classified as a **MINOR** amendment under the same semantic-
+versioning logic the constitution uses for its own amendments (new
+capability added, not a backward-incompatible change) — not a MAJOR
+change requiring a full re-run of `/speckit-clarify`.
+
+**Downstream artifacts updated for consistency in this same amendment**:
+`contracts/openapi.yaml` (`HealthStatus.analytics.
+degraded_since_unclean_shutdown_at`), `plan.md` §7, `data-model.md`
+(`analytics_system_status` table), `docs/adr/0009-analytics-consistency.md`
+— all now reflect FR-117 as an approved requirement, not merely a plan-
+stage proposal.
+
+**This amendment does not itself constitute Human Gate 4 closure.** Human
+Gate 4 (ADR acceptance) remains open and pending, tracked separately in
+`docs/governance/gate-4-review-2026-09-10.md`.
 
 ## How to Read This Specification
 
@@ -660,6 +701,21 @@ and suspends rather than guessing.
   resulting storage growth is an accepted, disclosed trade-off for this prototype
   (Constitution Principle VII), to be revisited if this were to move toward
   production scale.
+- **FR-117** (Confirmed — approved via Human Gate 4 amendment, 2026-09-10;
+  see spec.md "Human Gate 4 Amendment Record" below): The system MUST
+  detect when the prior process instance terminated without a recorded
+  clean shutdown, and MUST set a sticky, system-wide analytics integrity
+  signal (`degraded_since_unclean_shutdown_at`) when this is detected. This
+  signal MUST NOT be cleared automatically by backlog drainage or the mere
+  absence of pending work — clearing it requires an explicit, audited
+  operator acknowledgment action. Acknowledgment MUST clear only the
+  forward-looking warning; it MUST NOT retroactively assert or restore
+  historical completeness for any short code, and any short code already
+  marked `incomplete` as a result of the same or a prior uncertain window
+  MUST remain `incomplete` after acknowledgment. Historical uncertainty
+  from the affected window MUST remain visible in analytics evidence (audit
+  trail and/or per-code completeness status) — acknowledgment changes what
+  is *reported going forward*, never what is *recorded about the past*.
 
 ### Functional Requirements — Orchestration and Workflow
 
