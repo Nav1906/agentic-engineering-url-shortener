@@ -168,3 +168,75 @@ def recover_on_startup(conn: sqlite3.Connection) -> int:
     )
     conn.commit()
     return cur.rowcount
+
+
+def issue_retry_or_exhaust(conn: sqlite3.Connection, stage_id: str) -> str:
+    """T070/T071: retry-safety gate. A 'failed_transient' stage is only
+    ever retried FROM that state (i.e. after reconciliation has already run
+    and confirmed 'not_completed' — see reaper.reconcile_stage, which is the
+    only path that sets failed_transient on an externally_observable_uncertain
+    stage). Bounded by MAX_STAGE_ATTEMPTS (FR-402). Returns 'retried' or
+    'exhausted'."""
+    from src.orchestration.retry_policy import MAX_STAGE_ATTEMPTS
+
+    now = datetime.now(UTC).isoformat()
+    stage = conn.execute(
+        "SELECT attempt_count, status FROM orchestration_workflow_stage WHERE id=?", (stage_id,)
+    ).fetchone()
+    if stage["status"] != "failed_transient":
+        raise ValueError(f"stage {stage_id} is not failed_transient (got {stage['status']!r})")
+
+    if stage["attempt_count"] >= MAX_STAGE_ATTEMPTS:
+        conn.execute(
+            "UPDATE orchestration_workflow_stage SET status='failed_permanent', updated_at=? WHERE id=?",
+            (now, stage_id),
+        )
+        conn.commit()
+        return "exhausted"
+
+    conn.execute(
+        "UPDATE orchestration_workflow_stage SET status='ready', updated_at=? WHERE id=?",
+        (now, stage_id),
+    )
+    conn.commit()
+    return "retried"
+
+
+def apply_fallback_or_safe_stop(
+    conn: sqlite3.Connection,
+    workflow_instance_id: str,
+    stage_id: str,
+    fallback_stage_id: str | None = None,
+) -> str:
+    """T073/T075: FR-403 — exhausting bounded retry without recovery MUST
+    lead to a deterministic terminal outcome: fallback (if one is defined
+    for this stage) or safe-stop (FR-405) otherwise. Returns 'fallback' or
+    'safe_stopped'."""
+    now = datetime.now(UTC).isoformat()
+    if fallback_stage_id is not None:
+        conn.execute(
+            "UPDATE orchestration_workflow_stage SET status='ready', updated_at=? WHERE id=?",
+            (now, fallback_stage_id),
+        )
+        conn.commit()
+        return "fallback"
+
+    conn.execute(
+        "UPDATE orchestration_workflow_instance SET status='safe_stopped', updated_at=? WHERE id=?",
+        (now, workflow_instance_id),
+    )
+    conn.commit()
+    return "safe_stopped"
+
+
+def resume_from_safe_stop(conn: sqlite3.Connection, workflow_instance_id: str) -> None:
+    """T076: safe-stop is resumable ONLY via this explicit, separately-
+    invoked function — there is no automatic resume path anywhere else in
+    this module."""
+    now = datetime.now(UTC).isoformat()
+    conn.execute(
+        "UPDATE orchestration_workflow_instance SET status='running', updated_at=? "
+        "WHERE id=? AND status='safe_stopped'",
+        (now, workflow_instance_id),
+    )
+    conn.commit()
