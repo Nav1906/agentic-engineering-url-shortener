@@ -1,0 +1,17 @@
+# OS / editor noise
+.DS_Store
+*.swp
+
+# Local secrets / env
+.env
+.env.*
+
+# Claude Code local-only state (per SpecKit's own security notice: may hold
+# credentials/auth tokens). Skills under .claude/skills/ are intentionally
+# tracked so the integration works for anyone who clones the repo.
+.claude/settings.local.json
+
+# Confidential assignment materials (assignment brief, rubric, etc.) —
+# never commit these. Drop such files under one of these local-only paths.
+/confidential/
+/private/

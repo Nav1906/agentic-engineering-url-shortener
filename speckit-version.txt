@@ -1,0 +1,6 @@
+specify-cli 1.0.6
+source: git+https://github.com/github/spec-kit.git@v1.0.6
+resolved-commit: 96c9bd657bfd5de0d651a6165084932b7304ac9
+installed-via: uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v1.0.6
+integration: claude
+installed: 2026-09-10
