@@ -46,11 +46,13 @@ from src.api.routers import (
     metrics,
     redirect,
     short_links,
+    workflow_evidence,
     workflows,
 )
 
 app.include_router(short_links.router)
 app.include_router(workflows.router)
+app.include_router(workflow_evidence.router)
 app.include_router(health.router)
 app.include_router(metrics.router)
 app.include_router(approvals.router)
