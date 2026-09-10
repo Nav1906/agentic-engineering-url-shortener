@@ -31,6 +31,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Governed URL Shortener", version="0.1.0", lifespan=lifespan)
 
+from src.api.middleware.rate_limit import RateLimitMiddleware
+
+app.add_middleware(RateLimitMiddleware)
+
 
 def _get_conn():
     return get_connection()

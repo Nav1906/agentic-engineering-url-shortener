@@ -1,0 +1,11 @@
+version: "1.0.0"
+policies:
+  - id: dependency-secret-scan
+    description: Dependency and secret scanning required for release readiness
+    category: security
+  - id: change-control
+    description: Any material change to requirements, architecture, schemas, workflow states, security controls, or release criteria requires an ADR or spec amendment
+    category: compliance
+  - id: release-readiness
+    description: All FR-301 mandatory gates must be non-FAIL before release
+    category: compliance
