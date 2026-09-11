@@ -24,6 +24,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
 
 # Runtime SQLite database (ADR-0003, ADR-0010) — created on first run
 /data/
