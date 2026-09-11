@@ -15,7 +15,7 @@ Expected: server starts on `http://localhost:8000`. [quickstart.md](../specs/001
 ```bash
 uv run pytest tests/ -v
 ```
-Expected: `184 passed`. Also: `uv run mypy src/` → `Success: no issues found in 42 source files`; `uv run ruff check src/ tests/` → `All checks passed`.
+Expected: `242 passed`. Also: `uv run mypy src/` → `Success: no issues found in 47 source files`; `uv run ruff check src/ tests/ scripts/` → `All checks passed`.
 
 ## 4. How to exercise the URL shortener
 ```bash

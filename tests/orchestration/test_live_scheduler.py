@@ -109,3 +109,38 @@ def test_no_duplicate_claims_under_concurrent_ticks(tmp_path, monkeypatch):
     completed = [e for e in execs if e["status"] == "completed"]
     assert len(completed) == 1  # exactly one worker's claim was ever promoted to completed
     conn.close()
+
+
+def test_no_duplicate_policy_evaluations_under_concurrent_ticks(tmp_path, monkeypatch):
+    """Regression test added after the independent assessment flagged
+    _drive_workflow's SELECT-then-run_mandatory_policy_checks() guard as a
+    plausible TOCTOU shape (real concern: two ticks for the same workflow
+    both observing "no policy_evaluation rows yet" would each insert all 3
+    mandatory-policy rows, producing 6 instead of 3). Reuses the same
+    real-thread concurrency harness as
+    test_no_duplicate_claims_under_concurrent_ticks above to prove the
+    guard is actually safe under real concurrent access, not merely
+    reasoned about."""
+    db_path = str(tmp_path / "app.db")
+    monkeypatch.setattr(db_module, "DB_PATH", db_path)
+    setup_conn = db_module.get_connection()
+    db_module.init_schema(setup_conn)
+    wf = create_workflow_instance(setup_conn, "req")
+    add_stage(setup_conn, wf, "intake")
+    setup_conn.close()
+
+    def run_tick(worker_id: str):
+        tick(worker_id)
+
+    threads = [threading.Thread(target=run_tick, args=(f"worker-{i}",)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    conn = db_module.get_connection()
+    rows = conn.execute(
+        "SELECT policy_id FROM policy_evaluation WHERE workflow_instance_id=?", (wf,)
+    ).fetchall()
+    assert len(rows) == 3  # exactly one row per mandatory policy, never duplicated
+    conn.close()

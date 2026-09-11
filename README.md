@@ -32,7 +32,7 @@ defended against — read it before assuming more than it says.
 ## Quick facts
 
 - Python 3.12, FastAPI, SQLite (WAL mode), no external services, no Docker.
-- `uv run pytest tests/` — 241 real tests, all passing as of the last
+- `uv run pytest tests/` — 242 real tests, all passing as of the last
   commit on this branch.
 - Three required scenarios (greenfield/brownfield/ambiguous) each run as a
   standalone script against real code: `scripts/demo_*.py`.

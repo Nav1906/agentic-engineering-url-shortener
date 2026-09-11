@@ -21,7 +21,7 @@ application-code or architecture gaps.
 
 ## The 13 required outputs
 
-1. **Requirement traceability matrix** → [traceability-matrix.md](traceability-matrix.md) (unchanged this pass — already current, FR-101 through SC-006 mapped to task/code/test)
+1. **Requirement traceability matrix** → [traceability-matrix.md](traceability-matrix.md) (FR-101 through SC-006 mapped to task/code/test; **corrected during this pass** — its header cited a stale "184-test passing run"; this document was not actually independently re-verified when this report first claimed it was "already current," and is now corrected along with that claim, per the independent assessment's finding)
 2. **Final checklist status** → see below
 3. **Test and validation summary** → see below (full detail: [final-engineering-summary.md §17](final-engineering-summary.md))
 4. **Security summary** → [security-summary.md](security-summary.md) (new this pass)
@@ -38,8 +38,12 @@ application-code or architecture gaps.
 ## 2. Final checklist status
 
 117 objectively-verifiable checklist items across 5 custom files (19
-guide-mandated categories) plus the built-in 14-item `requirements.md`
-(already 14/14 from `/speckit-clarify`). Reviewed against actual current
+guide-mandated categories) plus the built-in 16-item `requirements.md`
+(14 fully checked, 2 explicitly `[~]` partial — disclosed in that file's
+own Notes section, not silently dropped from the count; "14/14" undercounts
+the file's actual scope and was corrected to "14/16, 2 partial" here after
+the independent assessment flagged the more favorable framing). Reviewed
+against actual current
 evidence during this pass — items were **not** mechanically bulk-marked;
 each was individually evaluated against real spec/plan/ADR/code/test
 content, and several `[Gap]`-tagged items that were open at spec-quality
@@ -72,7 +76,7 @@ unsatisfied. Each is a legitimate, minor, non-blocking specification gap:
 | CHK074 | "Resumption correctly worked" evidence criteria not formally specified (tests do compare specific state, but no spec-level definition exists) | Tests (`test_safe_stop_resume.py`, `test_restart_recovery.py`) do this in practice |
 | CHK080 | No minimum audit-evidence retention period specified | Explicitly left open, not silently assumed |
 | CHK084 | No numeric test-coverage target for reconciliation logic specifically | Reconciliation is tested (`test_reconciliation.py`) without a stated numeric floor |
-| CHK086 | No formal flaky/order-dependent test detection rule | None observed in 241 real test runs this session |
+| CHK086 | No formal flaky/order-dependent test detection rule | None observed in 242 real test runs this session |
 | CHK096 | No precise spec-level definition of "impacted" for brownfield impact analysis | The brownfield demo's own impact-analysis stage enumerates concrete dimensions in practice |
 | CHK101 | No explicit statement distinguishing the ambiguous scenario's impact analysis from the brownfield scenario's | Conceptually distinct (post-clarification vs. pre-change) but left to reviewer inference |
 | CHK106 | The final-tag requirement (`assessment-submission-v1.0`) is not yet written into any repository document | By design — tagging is Phase 5 of this convergence pass, not yet reached; **do not tag yet**, per explicit instruction |
@@ -85,7 +89,7 @@ prior run):
 
 | Check | Command | Result |
 |---|---|---|
-| Full test suite | `uv run pytest tests/` | **241 passed, 0 failed** |
+| Full test suite | `uv run pytest tests/` | **242 passed, 0 failed** (241 at convergence-pass time, +1 new regression test added post-independent-assessment for the concurrency fix -- see final-independent-assessment.md) |
 | Type check | `uv run mypy src/` | Success, no issues found in 47 source files |
 | Lint | `uv run ruff check src/ tests/ scripts/` | All checks passed |
 
@@ -95,7 +99,7 @@ e2e/policy) and the live-server credential demonstration: see
 not duplicated, since those per-sweep numbers did not change this pass
 (only the security suite grew, from 42 to 46 tests, by the 4 new identity-
 impersonation-resistance tests added as part of this convergence pass's
-pre-push checks; verified above via the full-suite total, 237→241).
+pre-push checks; verified above via the full-suite total, 237→241→242, the last +1 from the post-assessment concurrency-fix regression test).
 
 ## 13. Release-readiness decision
 
@@ -104,7 +108,7 @@ pre-push checks; verified above via the full-suite total, 237→241).
 Restated from [final-engineering-summary.md §1](final-engineering-summary.md)
 and unchanged by this convergence pass: every mandatory requirement,
 scenario, security control, human-approval gate, policy-check outcome, and
-validation step is complete, real, and tested (241 passing tests,
+validation step is complete, real, and tested (242 passing tests,
 re-verified in a fresh clone). The accepted limitations — same-OS-user
 credential-file compromise, operator-macOS-account compromise, and any
 future release reintroducing external-agent execution — are fully

@@ -25,14 +25,27 @@ def evaluate_policy(
     src/policy/live.py::is_release_ready."""
     outcome = check_fn()
     now = datetime.now(UTC).isoformat()
+    # INSERT OR IGNORE + the schema's (workflow, policy, revision) UNIQUE
+    # constraint make this race-safe under real concurrent callers (e.g.
+    # two scheduler ticks hitting the same workflow at once): only the
+    # first insert for a given triple ever lands, cur.rowcount tells us
+    # which happened, and a lost race still returns the WINNING row's real
+    # id rather than a stale/zero lastrowid.
     cur = conn.execute(
-        "INSERT INTO policy_evaluation "
+        "INSERT OR IGNORE INTO policy_evaluation "
         "(workflow_instance_id, policy_id, policy_version, artifact_revision, outcome, evaluated_at) "
         "VALUES (?,?,?,?,?,?)",
         (workflow_instance_id, policy_id, policy_version, artifact_revision, outcome, now),
     )
     conn.commit()
-    return cur.lastrowid  # type: ignore[return-value]
+    if cur.rowcount == 1:
+        return cur.lastrowid  # type: ignore[return-value]
+    existing = conn.execute(
+        "SELECT id FROM policy_evaluation "
+        "WHERE workflow_instance_id IS ? AND policy_id = ? AND artifact_revision IS ?",
+        (workflow_instance_id, policy_id, artifact_revision),
+    ).fetchone()
+    return existing["id"]
 
 
 def has_unresolved_fail(conn: sqlite3.Connection, workflow_instance_id: str) -> bool:

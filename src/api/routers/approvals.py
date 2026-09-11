@@ -1,9 +1,10 @@
-"""Approval gate endpoints (T065, T067, T069; FR-301,302,307-313).
+"""Approval gate endpoints (T065, T067, T069, T100-T103; FR-301,302,307-313).
 
-Role/revision-binding logic here is real and tested. It is fail-closed with
-respect to ADR-0006: since no credential-provisioning path is wired (T100/
-T101 blocked), no real bearer token will ever resolve to an identity in a
-genuine deployment of this code — see src/api/auth.py's module docstring.
+Role/revision-binding logic here is real and tested. Identity is derived
+only from a verified bearer token, never a client-supplied field — real
+credential provisioning (T100/T101, ADR-0006 Revision 5) is wired in; see
+src/api/auth.py's module docstring for the full mechanism and
+docs/threat-model.md for what it does and does not defend against.
 """
 from __future__ import annotations
 

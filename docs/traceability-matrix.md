@@ -1,6 +1,6 @@
 # Traceability Matrix: Requirement → Task → Code → Test
 
-**Generated**: 2026-09-11. Spot-check method: for each row, the Code and Test paths are real files in this repository as of commit `21b3866` and later; the Test column's file, if present, was part of the 184-test passing run. `—` in Test means no dedicated test exists for that requirement specifically (see Status).
+**Generated**: 2026-09-11, **corrected during `/speckit-converge` and the independent assessment pass**. Spot-check method: for each row, the Code and Test paths are real files in this repository as of commit `21b3866` and later; the Test column's file, if present, was part of the current full-suite passing run (**241 passed** as of the convergence pass (242 after a post-assessment regression test was added, see final-independent-assessment.md) — the "184" figure this line previously cited was stale, left over from an earlier point in implementation, and was not actually re-verified during convergence despite `convergence-report.md` initially claiming this document was "already current"; both are corrected together here). `—` in Test means no dedicated test exists for that requirement specifically (see Status).
 
 ## Domain (FR-101–117)
 

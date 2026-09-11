@@ -137,7 +137,15 @@ CREATE TABLE IF NOT EXISTS policy_evaluation (
     policy_version TEXT NOT NULL,
     artifact_revision TEXT,
     outcome TEXT NOT NULL CHECK (outcome IN ('PASS', 'FAIL', 'EXCEPTION-REQUESTED', 'NOT-APPLICABLE')),
-    evaluated_at TEXT NOT NULL
+    evaluated_at TEXT NOT NULL,
+    -- FR-303 "record exactly one outcome per check": at most one row per
+    -- (workflow, policy, revision) triple. SQLite treats each NULL as
+    -- distinct, so calls that omit workflow_instance_id/artifact_revision
+    -- (unit tests exercising evaluate_policy in isolation) are unaffected --
+    -- this only dedupes the concrete-revision case the live scheduler's
+    -- automatic per-workflow check uses, closing the race a concurrent-tick
+    -- regression test demonstrated (tests/orchestration/test_live_scheduler.py).
+    UNIQUE (workflow_instance_id, policy_id, artifact_revision)
 );
 
 CREATE TABLE IF NOT EXISTS policy_exception (

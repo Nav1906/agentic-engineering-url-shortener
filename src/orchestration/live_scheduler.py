@@ -52,8 +52,8 @@ def _execute_stage_safely(conn: sqlite3.Connection, stage_id: str, stage_name: s
 
 def _drive_workflow(conn: sqlite3.Connection, workflow_instance_id: str, worker_id: str) -> None:
     already_checked = conn.execute(
-        "SELECT 1 FROM policy_evaluation WHERE workflow_instance_id=? LIMIT 1",
-        (workflow_instance_id,),
+        "SELECT 1 FROM policy_evaluation WHERE workflow_instance_id=? AND artifact_revision=? LIMIT 1",
+        (workflow_instance_id, _DEMO_ARTIFACT_REVISION),
     ).fetchone()
     if already_checked is None:
         outcomes = run_mandatory_policy_checks(conn, workflow_instance_id, _DEMO_ARTIFACT_REVISION)
