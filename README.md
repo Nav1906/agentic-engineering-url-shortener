@@ -13,7 +13,7 @@ the primary object of evaluation. See
 - **Requirements**: [specs/001-governed-url-shortener/spec.md](specs/001-governed-url-shortener/spec.md) (Approved)
 - **Plan and architecture**: [specs/001-governed-url-shortener/plan.md](specs/001-governed-url-shortener/plan.md) (all 10 ADRs Accepted)
 - **Architecture Decision Records**: [docs/adr/](docs/adr/)
-- **Task plan**: [specs/001-governed-url-shortener/tasks.md](specs/001-governed-url-shortener/tasks.md) (103/103 tasks complete)
+- **Task plan**: [specs/001-governed-url-shortener/tasks.md](specs/001-governed-url-shortener/tasks.md) (106/106 tasks complete)
 - **Threat model**: [docs/threat-model.md](docs/threat-model.md)
 - **Governance history**: [docs/governance/](docs/governance/)
 - **Final Engineering Summary**: [docs/final-engineering-summary.md](docs/final-engineering-summary.md)

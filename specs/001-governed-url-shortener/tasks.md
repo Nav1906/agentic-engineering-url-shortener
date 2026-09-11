@@ -33,7 +33,9 @@ same meaning as the guide's "parallelization status" field.
 `- [x] **Txxx**` = this task's own Done criterion has genuinely passed, with
 real retained evidence (a command, its output, and — where applicable — a
 commit) cited in that task's own entry or in
-`docs/final-engineering-summary.md`. **All 103 tasks are now `[x]`** —
+`docs/final-engineering-summary.md`. **All 106 tasks are now `[x]`**
+(T001–T106; T104–T106 added later the same day to close three disclosed
+engineering gaps — see Phase 43 below) —
 T100–T103 (originally governance-blocked) were unblocked and implemented
 2026-09-11 under ADR-0006 Revision 5 (scope-limited, external-agent
 execution permanently excluded — see the "Unblocked 2026-09-11" note
@@ -1261,12 +1263,15 @@ accepted 2026-09-11 — see above.*
 
 - **Not implemented by this document** — per the guide's explicit rule, no code is written here; this is the plan `/speckit-implement` executes against.
 - **Human approval markers** above are not exhaustive of every constitutional gate — they flag tasks with a *specific, named* open decision (scheme allow-list, scenario-input selection, release-readiness sign-off, ADR-0006's interim posture, and — new since the remediation pass below — the ADR-0006 replacement decision gating T100–T103). Ordinary implementation work proceeds under the already-accepted plan/ADRs without a fresh gate per task, consistent with the constitution's task-group autonomy boundary.
-- **103 tasks total** (T001–T103; no ID gaps or duplicates — verified by the
-  `/speckit-analyze` remediation rerun below), organized into 42 groups
-  matching the guide's required list exactly (including both items the guide
-  numbered "11"), plus four explicitly BLOCKED tasks (T100–T103) added
-  within Group 19 during remediation — the guide's group numbering (1–42) is
-  unchanged; only the task count within Group 19 grew.
+- **106 tasks total** (T001–T106; no ID gaps or duplicates — reverified
+  2026-09-11), organized into 43 groups: 42 matching the guide's required
+  list exactly (including both items the guide numbered "11"), plus Group
+  19's four originally-BLOCKED tasks (T100–T103, now implemented) and a
+  new Phase 43 (T104–T106, added 2026-09-11 to close three disclosed
+  engineering gaps). At the time this note was first written (2026-09-10,
+  during `/speckit-analyze` remediation) the total was 103 (T001–T103);
+  it grew to 106 the following day, T104–T106 — historical detail
+  preserved unchanged in the "Remediation Record" section below.
 - Before any of this executes, per the constitution's task-group boundary: one coherent group + its tests + its documentation + its traceability update, then stop, inspect, and commit — not an unbounded run across this whole file.
 
 ## Phase 43: Group 43 — Post-Implementation Gap Closure

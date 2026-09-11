@@ -186,7 +186,7 @@ curl -s http://localhost:8000/metrics/reliability
 
 ## Not yet implemented / explicitly out of scope
 
-As of 2026-09-11, all 103 tasks in `tasks.md` are complete (T100–T103
+As of 2026-09-11, all 106 tasks in `tasks.md` are complete (T100–T103
 unblocked and implemented under ADR-0006 Revision 5; T104–T106 closed the
 remaining engineering gaps). What remains is genuinely, permanently out of
 scope for this release, not merely undone:

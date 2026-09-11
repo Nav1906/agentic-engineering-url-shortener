@@ -1,6 +1,6 @@
 # Final Engineering Summary: Governed URL Shortener
 
-**Generated**: 2026-09-11, after `/speckit-implement` (T001–T099 of 103). **Updated 2026-09-11 (twice)**: first after T104–T106 closed the three genuinely-incomplete engineering gaps this summary originally disclosed (conditional branching, live policy wiring, live HTTP-triggered execution — §6, §8, §19); then after Human Gate 4 accepted a scope-limited ADR-0006 Revision 5 and T100–T103 were implemented and verified (§1, §7, §10, §19, §21). This summary was generated before an independent convergence/final-assessment pass (`/speckit-converge`) has run — it reflects the implementer's own evidence-based account, not an independent reviewer's sign-off. Every claim below cites a repository path, a command, and an actual result; nothing here is asserted without that.
+**Generated**: 2026-09-11, after `/speckit-implement` (T001–T099 of what was then 103). **Updated 2026-09-11 (twice)**: first after T104–T106 closed the three genuinely-incomplete engineering gaps this summary originally disclosed (conditional branching, live policy wiring, live HTTP-triggered execution — §6, §8, §19); then after Human Gate 4 accepted a scope-limited ADR-0006 Revision 5 and T100–T103 were implemented and verified (§1, §7, §10, §19, §21). This summary was generated before an independent convergence/final-assessment pass (`/speckit-converge`) has run — it reflects the implementer's own evidence-based account, not an independent reviewer's sign-off. Every claim below cites a repository path, a command, and an actual result; nothing here is asserted without that.
 
 ## 1. Executive Engineering Outcome and Release-Readiness Status
 
@@ -14,7 +14,7 @@ The accepted limitations, all explicitly disclosed in `docs/threat-model.md` and
 
 Objective (per [constitution.md](../.specify/memory/constitution.md) Project Context): demonstrate a governed, stateful, non-linear agentic orchestration system, using a URL shortener as the demonstration domain — the orchestration system is the primary object of evaluation, not the shortener itself. Timebox: 2–3 days ([spec.md Constraints](../specs/001-governed-url-shortener/spec.md)).
 
-Outcome: the full SpecKit lifecycle ran to completion — constitution → spec (Approved) → clarify → plan/ADRs (9 of 10 Accepted) → checklist → tasks (103 tasks, 42 groups) → analyze (2 passes, second pass clean) → implement. All three required scenarios (greenfield/brownfield/ambiguous) execute and pass against real code. The one ADR that didn't reach Accepted (ADR-0006) was carried forward as an explicitly disclosed, governance-gated risk per your own timebox-sequencing decision, not silently dropped.
+Outcome: the full SpecKit lifecycle ran to completion — constitution → spec (Approved) → clarify → plan/ADRs (all 10 Accepted, ADR-0006 via a scope-limited Revision 5) → checklist → tasks (106 tasks, 43 groups) → analyze (2 passes, second pass clean) → implement. All three required scenarios (greenfield/brownfield/ambiguous) execute and pass against real code. The one ADR that didn't reach Accepted (ADR-0006) was carried forward as an explicitly disclosed, governance-gated risk per your own timebox-sequencing decision, not silently dropped.
 
 ## 3. Confirmed Requirements, Assumptions, Exclusions, and Deferred Scope
 
