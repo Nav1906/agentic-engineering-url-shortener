@@ -28,6 +28,15 @@ task; broader coverage still flows through the FR-level traceability chain.
 eligible siblings — reused from the standard SpecKit convention, carrying the
 same meaning as the guide's "parallelization status" field.
 
+**Status markers, added 2026-09-11 after `/speckit-implement` ran T001–T099**
+(`/speckit-implement`'s own "Done When" step: mark completed tasks `[X]`):
+`- [x] **Txxx**` = this task's own Done criterion has genuinely passed, with
+real retained evidence (a command, its output, and — where applicable — a
+commit) cited in that task's own entry or in
+`docs/final-engineering-summary.md`. `- [ ] **Txxx**` = not done; currently
+only T100–T103 (governance-blocked per explicit instruction, never
+attempted). No task is marked `[x]` on the strength of a written plan alone.
+
 ---
 
 ## Phase 0: Timebox and Scope Control
@@ -37,7 +46,7 @@ must-have scope, deferred scope, day-level milestones, critical path,
 checkpoint decisions, and stop conditions for the 2–3 day timebox, before
 any other task begins.
 
-- **T001** — Ratify must-have vs. deferred scope for this timebox
+- [x] **T001** — Ratify must-have vs. deferred scope for this timebox
   **Req**: all FR groups **Scn**: — **ADR**: — **Path**: this file (below)
   **Prereq**: none **Dep**: none **P**: no
   **Artifact**: the "Must-Have / Deferred" table below
@@ -70,7 +79,7 @@ the project's core human-governance control (Constitution Principle III)
 refusing to let a credential-handling code path get built without an
 accepted isolation boundary around it.
 
-- **T002** — Define day-level milestones and critical path
+- [x] **T002** — Define day-level milestones and critical path
   **Req**: — **Scn**: — **ADR**: — **Path**: this file **Prereq**: T001 **Dep**: T001 **P**: no
   **Artifact**: milestone table below **TDD**: n/a **Validation**: reviewer inspection
   **Docs**: this file **Trace**: plan.md §14 Delivery Sequence
@@ -84,7 +93,7 @@ accepted isolation boundary around it.
 | 2–3 | Three scenarios (Groups 28–30), tests (Groups 31–36) | Yes |
 | 3 | Documentation, setup, release-readiness, checkpoint decisions (Groups 37–39) | Yes |
 
-- **T003** — Define stop conditions and checkpoint decisions
+- [x] **T003** — Define stop conditions and checkpoint decisions
   **Req**: — **Scn**: — **ADR**: — **Path**: this file **Prereq**: T001 **Dep**: T001 **P**: no
   **Artifact**: stop-condition list below **TDD**: n/a **Validation**: reviewer inspection
   **Docs**: this file **Trace**: plan.md § Planning Constraints
@@ -106,7 +115,7 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 1: Group 1 — Engineering Baseline
 
-- **T004** — Scaffold package layout per ADR-0001
+- [x] **T004** — Scaffold package layout per ADR-0001
   **Req**: — **Scn**: — **ADR**: ADR-0001 **Path**: `src/{domain,orchestration,policy,api,persistence,observability}/__init__.py`
   **Prereq**: none **Dep**: none **P**: no
   **Artifact**: package skeleton **TDD**: n/a (structural) **Validation**: `python3 -c "import src.domain, src.orchestration, src.policy, src.api, src.persistence, src.observability"`
@@ -114,14 +123,14 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: package boundary drift — mitigated by no cross-package persistence imports (checked in T005)
   **Done**: all six packages importable **Human**: no
 
-- **T005** [P] — Pin dependencies per ADR-0002
+- [x] **T005** [P] — Pin dependencies per ADR-0002
   **Req**: — **Scn**: — **ADR**: ADR-0002 **Path**: `pyproject.toml`, lockfile
   **Prereq**: T004 **Dep**: T004 **P**: yes (independent of T006)
   **Artifact**: `pyproject.toml` + lock **TDD**: n/a **Validation**: `uv sync && uv run python3 --version` (expect 3.12.x)
   **Docs**: ADR-0002 (already records the decision) **Trace**: ADR-0002
   **Risk**: version drift from ADR-0002's pinned choice **Done**: `uv sync` succeeds, exit 0 **Human**: no
 
-- **T006** [P] — Configure lint/type-check tooling
+- [x] **T006** [P] — Configure lint/type-check tooling
   **Req**: — **Scn**: — **ADR**: ADR-0002 **Path**: `pyproject.toml` (`[tool.mypy]`, `[tool.ruff]` or equivalent)
   **Prereq**: T004 **Dep**: T004 **P**: yes (independent of T005)
   **Artifact**: lint/type config **TDD**: n/a **Validation**: `uv run mypy src/ ; uv run ruff check src/` (or chosen linter) — exit code retained regardless of pass/fail
@@ -134,14 +143,14 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 2: Group 2 — Walking Skeleton
 
-- **T007** — Minimal FastAPI app + `/health` stub
+- [x] **T007** — Minimal FastAPI app + `/health` stub
   **Req**: FR-111 **Scn**: — **ADR**: ADR-0002 **Path**: `src/api/main.py`
   **Prereq**: T004–T006 **Dep**: T004 **P**: no
   **Artifact**: running app **TDD**: test-first (T008 before this) **Validation**: `uv run uvicorn src.api.main:app --port 8000 &`; `curl -sf http://localhost:8000/health`
   **Docs**: quickstart.md (already describes target command) **Trace**: FR-111
   **Risk**: none material **Done**: `/health` returns 200 **Human**: no
 
-- **T008** — Failing contract test for `/health`
+- [x] **T008** — Failing contract test for `/health`
   **Req**: FR-111 **Scn**: — **ADR**: — **Path**: `tests/contract/test_health.py`
   **Prereq**: T004 **Dep**: none (written before T007's implementation) **P**: no
   **Artifact**: failing test **TDD**: this IS the "write failing test" TDD step for T007
@@ -149,14 +158,14 @@ reachable before continuing to exhaustive test-suite breadth.
   **Docs**: none **Trace**: FR-111
   **Risk**: none **Done**: fails for the expected reason (no app yet), then passes after T007 **Human**: no
 
-- **T009** [P] — End-to-end quickstart smoke script
+- [x] **T009** [P] — End-to-end quickstart smoke script
   **Req**: — **Scn**: — **ADR**: ADR-0010 **Path**: `scripts/smoke.sh`
   **Prereq**: T007 **Dep**: T007 **P**: yes (independent of T010)
   **Artifact**: smoke script **TDD**: n/a **Validation**: `bash scripts/smoke.sh` — exit 0
   **Docs**: quickstart.md **Trace**: ADR-0010
   **Risk**: none **Done**: script runs clean from a fresh clone **Human**: no
 
-- **T010** [P] — First coherent commit checkpoint
+- [x] **T010** [P] — First coherent commit checkpoint
   **Req**: — **Scn**: — **ADR**: — **Path**: n/a (git)
   **Prereq**: T007–T009 **Dep**: T007 **P**: yes
   **Artifact**: git commit **TDD**: n/a **Validation**: `git log -1 --stat`
@@ -170,7 +179,7 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 3: Group 3 — Domain Model
 
-- **T011** [P] — `domain_short_link` table + model
+- [x] **T011** [P] — `domain_short_link` table + model
   **Req**: FR-101–FR-104, FR-114 **Scn**: US1 **ADR**: ADR-0003 **Path**: `src/persistence/schema.py`, `src/domain/short_link.py`
   **Prereq**: T004 **Dep**: T004 **P**: yes (independent file from T012–T014)
   **Artifact**: table + model **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_short_link_model.py`
@@ -182,21 +191,21 @@ reachable before continuing to exhaustive test-suite breadth.
   this 99-task plan (a stray reference caught by the analyze rerun)
   **Done**: model matches data-model.md field-for-field **Human**: no
 
-- **T012** [P] — `domain_idempotency_record` table + model
+- [x] **T012** [P] — `domain_idempotency_record` table + model
   **Req**: FR-112, FR-113, FR-116 **Scn**: US1 **ADR**: ADR-0003 **Path**: `src/persistence/schema.py`, `src/domain/idempotency.py`
   **Prereq**: T004 **Dep**: T004 **P**: yes
   **Artifact**: table + model **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_idempotency_model.py`
   **Docs**: data-model.md **Trace**: FR-112, FR-113, FR-116
   **Risk**: none beyond T011's **Done**: matches data-model.md **Human**: no
 
-- **T013** [P] — Analytics tables (`domain_analytics_outbox`, `applied_events`, `analytics_system_status`, `domain_short_link_analytics_summary`)
+- [x] **T013** [P] — Analytics tables (`domain_analytics_outbox`, `applied_events`, `analytics_system_status`, `domain_short_link_analytics_summary`)
   **Req**: FR-105–FR-107, FR-115, FR-117 **Scn**: US1 **ADR**: ADR-0009 **Path**: `src/persistence/schema.py`, `src/domain/analytics.py`
   **Prereq**: T011 **Dep**: T011 (FK to short_link) **P**: no (shares `schema.py` with T011/T012 — sequential, not parallel, per the "don't parallelize same-file edits" rule)
   **Artifact**: 4 tables + model **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_analytics_model.py`
   **Docs**: data-model.md, spec.md FR-117 **Trace**: FR-117 (Human Gate 4 amendment)
   **Risk**: this is the ADR-0009 Accepted design's core schema — a schema bug here undermines every analytics guarantee **Done**: matches data-model.md **Human**: no
 
-- **T014** — Domain validation rules (destination URL scheme allow-list, expiry validation)
+- [x] **T014** — Domain validation rules (destination URL scheme allow-list, expiry validation)
   **Req**: FR-101, FR-114 **Scn**: US1 **ADR**: — **Path**: `src/domain/validation.py`
   **Prereq**: T011 **Dep**: T011 **P**: no
   **Artifact**: validator module **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_domain_validation.py`
@@ -210,14 +219,14 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 4: Group 4 — API Contracts
 
-- **T015** — Generate Pydantic models from `contracts/openapi.yaml`
+- [x] **T015** — Generate Pydantic models from `contracts/openapi.yaml`
   **Req**: — **Scn**: — **ADR**: ADR-0002 **Path**: `src/api/schemas.py`
   **Prereq**: T011–T013 **Dep**: T011 **P**: no
   **Artifact**: schema module **TDD**: n/a (derived from already-validated contract) **Validation**: `uv run python3 -c "from src.api.schemas import ShortLinkCreateRequest"`
   **Docs**: contracts/openapi.yaml (source of truth) **Trace**: contracts/openapi.yaml
   **Risk**: contract drift if hand-edited out of sync with `openapi.yaml` **Done**: schema fields match contract 1:1 **Human**: no
 
-- **T016** [P] — Contract-version and compatibility-review note
+- [x] **T016** [P] — Contract-version and compatibility-review note
   **Req**: FR-306 **Scn**: — **ADR**: — **Path**: `contracts/openapi.yaml` (versioning section, already present)
   **Prereq**: T015 **Dep**: T015 **P**: yes
   **Artifact**: no change needed yet (v0.1.0-proposed stands until first breaking need) **TDD**: n/a
@@ -225,14 +234,14 @@ reachable before continuing to exhaustive test-suite breadth.
   **Docs**: contracts/openapi.yaml **Trace**: FR-306
   **Risk**: none yet — no change has occurred **Done**: validator exits 0 **Human**: no (no change yet to approve)
 
-- **T017** [P] — Representative request/response examples
+- [x] **T017** [P] — Representative request/response examples
   **Req**: — **Scn**: — **ADR**: — **Path**: `contracts/examples/`
   **Prereq**: T015 **Dep**: T015 **P**: yes
   **Artifact**: example JSON files per endpoint **TDD**: n/a **Validation**: examples validate against their schema (`uv run python3 scripts/validate_examples.py`, to be written)
   **Docs**: contracts/ **Trace**: guide §9.2 "representative examples"
   **Risk**: none **Done**: one example per endpoint, schema-valid **Human**: no
 
-- **T018** — Contract tests (endpoint-schema conformance)
+- [x] **T018** — Contract tests (endpoint-schema conformance)
   **Req**: — **Scn**: — **ADR**: — **Path**: `tests/contract/`
   **Prereq**: T015, T017 **Dep**: T015 **P**: no
   **Artifact**: contract test suite **TDD**: test-first relative to each endpoint's implementation (Groups 6–9)
@@ -247,14 +256,14 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 5: Group 5 — Persistence Abstraction
 
-- **T019** — SQLite connection/transaction helper, WAL mode, `busy_timeout`
+- [x] **T019** — SQLite connection/transaction helper, WAL mode, `busy_timeout`
   **Req**: FR-109, FR-110 **Scn**: — **ADR**: ADR-0003, ADR-0007 **Path**: `src/persistence/db.py`
   **Prereq**: T004 **Dep**: T004 **P**: no
   **Artifact**: connection helper **TDD**: test-first **Validation**: `uv run pytest tests/persistence/test_db.py`
   **Docs**: ADR-0003 (already documents the design) **Trace**: ADR-0003, ADR-0007's contention policy
   **Risk**: incorrect transaction scoping could reintroduce the contention issues ADR-0007 exists to prevent **Done**: WAL mode confirmed active (`PRAGMA journal_mode`), `busy_timeout=2000` confirmed set **Human**: no
 
-- **T020** [P] — Bounded-retry wrapper for `SQLITE_BUSY`/`SQLITE_LOCKED`
+- [x] **T020** [P] — Bounded-retry wrapper for `SQLITE_BUSY`/`SQLITE_LOCKED`
   **Req**: FR-402 (narrowed from a broad FR-401–FR-406 citation during
   `/speckit-analyze` remediation, 2026-09-10, finding E1 — this task's bounded
   attempt count and backoff is FR-402's specific subject; it does not itself
@@ -268,7 +277,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: this is the mechanism the whole "no hang, ever" guarantee rests on — under-test here is high-impact
   **Done**: forced contention produces exactly 3 attempts then a clean failure, never a hang **Human**: no
 
-- **T021** [P] — Restart-recovery integration test (kill mid-workflow, confirm state intact)
+- [x] **T021** [P] — Restart-recovery integration test (kill mid-workflow, confirm state intact)
   **Req**: FR-204, FR-205 **Scn**: — **ADR**: ADR-0003 **Path**: `tests/persistence/test_restart_recovery.py`
   **Prereq**: T019 **Dep**: T019 **P**: yes
   **Artifact**: test **TDD**: test-first (written before any orchestration state exists to test against — will initially skip/xfail until Group 17 lands)
@@ -283,13 +292,13 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 6: Group 6 — URL Shortening
 
-- **T022** — Failing test: create short link (valid URL) → 201
+- [x] **T022** — Failing test: create short link (valid URL) → 201
   **Req**: FR-101, FR-102 **Scn**: US1 AS1 **ADR**: — **Path**: `tests/contract/test_create_short_link.py`
   **Prereq**: T018 **Dep**: T018 **P**: no
   **Artifact**: failing test **TDD**: step 1–3 of TDD sequence **Validation**: `uv run pytest tests/contract/test_create_short_link.py::test_valid_url -x`
   **Docs**: none **Trace**: FR-101, FR-102 **Risk**: none **Done**: fails for "no endpoint" reason **Human**: no
 
-- **T023** — Implement `POST /short-links` (happy path)
+- [x] **T023** — Implement `POST /short-links` (happy path)
   **Req**: FR-101, FR-102 **Scn**: US1 AS1 **SC**: SC-001 **ADR**: ADR-0004 **Path**: `src/api/routers/short_links.py`, `src/domain/short_link.py`
   **Prereq**: T022 **Dep**: T022, T014 **P**: no
   **Artifact**: working endpoint **TDD**: step 4–7 **Validation**: `uv run pytest tests/contract/test_create_short_link.py::test_valid_url`
@@ -297,7 +306,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: short-code generation collision handling (ADR-0004) must be exercised, not just the happy path — covered by T024
   **Done**: T022's test passes **Human**: no
 
-- **T024** [P] — Short-code collision + bounded-retry test
+- [x] **T024** [P] — Short-code collision + bounded-retry test
   **Req**: FR-102 **Scn**: — **ADR**: ADR-0004 **Path**: `tests/unit/test_short_code_collision.py`
   **Prereq**: T023 **Dep**: T023 **P**: yes (independent of T025)
   **Artifact**: test forcing a collision (shrunk alphabet in test config) **TDD**: test-first for this specific behavior
@@ -305,13 +314,13 @@ reachable before continuing to exhaustive test-suite breadth.
   **Docs**: ADR-0004 **Trace**: ADR-0004's bounded-retry design
   **Risk**: none beyond what ADR-0004 already discloses **Done**: retry bounded, deterministic failure on exhaustion **Human**: no
 
-- **T025** — Failing test: invalid scheme → 400, no link created
+- [x] **T025** — Failing test: invalid scheme → 400, no link created
   **Req**: FR-101 **Scn**: US1 AS3 **ADR**: — **Path**: `tests/contract/test_create_short_link.py`
   **Prereq**: T023 **Dep**: T023 **P**: no
   **Artifact**: failing test **TDD**: step 1–3 **Validation**: `uv run pytest tests/contract/test_create_short_link.py::test_invalid_scheme -x`
   **Docs**: none **Trace**: FR-101 negative path **Risk**: none **Done**: fails for expected reason **Human**: no
 
-- **T026** — Implement scheme validation rejection path
+- [x] **T026** — Implement scheme validation rejection path
   **Req**: FR-101 **Scn**: US1 AS3 **ADR**: — **Path**: `src/api/routers/short_links.py`
   **Prereq**: T025, T014 **Dep**: T025, T014 **P**: no
   **Artifact**: rejection path **TDD**: step 4–7 **Validation**: `uv run pytest tests/contract/test_create_short_link.py::test_invalid_scheme`
@@ -319,7 +328,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: **carries T014's open item** — final allowed-scheme list still needs your confirmation
   **Done**: T025's test passes **Human**: yes (inherits T014's open scheme-list confirmation)
 
-- **T027** [P] — Idempotency-Key request-level idempotency (FR-108, FR-112, FR-113)
+- [x] **T027** [P] — Idempotency-Key request-level idempotency (FR-108, FR-112, FR-113)
   **Req**: FR-108, FR-112, FR-113 **Scn**: US1 AS5–7 **ADR**: ADR-0003 **Path**: `src/api/routers/short_links.py`, `src/domain/idempotency.py`
   **Prereq**: T012, T023 **Dep**: T012, T023 **P**: yes (independent file focus from T028)
   **Artifact**: idempotency logic **TDD**: test-first, 3 cases (no key/new code, same key+payload/return original, same key+different payload/409)
@@ -334,19 +343,19 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 7: Group 7 — Redirect Resolution
 
-- **T028** — Failing test: resolve valid code → 302 + destination
+- [x] **T028** — Failing test: resolve valid code → 302 + destination
   **Req**: FR-103 **Scn**: US1 AS2 **ADR**: — **Path**: `tests/contract/test_resolve.py`
   **Prereq**: T023 **Dep**: T023 **P**: no
   **Artifact**: failing test **TDD**: step 1–3 **Validation**: `uv run pytest tests/contract/test_resolve.py::test_valid -x`
   **Docs**: none **Trace**: FR-103 **Risk**: none **Done**: fails for expected reason **Human**: no
 
-- **T029** — Implement `GET /{shortCode}` resolution
+- [x] **T029** — Implement `GET /{shortCode}` resolution
   **Req**: FR-103 **Scn**: US1 AS2 **SC**: SC-001 **ADR**: — **Path**: `src/api/routers/redirect.py`
   **Prereq**: T028 **Dep**: T028 **P**: no
   **Artifact**: working redirect **TDD**: step 4–7 **Validation**: `uv run pytest tests/contract/test_resolve.py::test_valid`
   **Docs**: quickstart.md **Trace**: FR-103 **Risk**: none **Done**: T028's test passes **Human**: no
 
-- **T030** [P] — Unknown vs. expired distinction (404 vs. 410)
+- [x] **T030** [P] — Unknown vs. expired distinction (404 vs. 410)
   **Req**: FR-103 **Scn**: US1 AS4 **ADR**: — **Path**: `src/api/routers/redirect.py`
   **Prereq**: T029 **Dep**: T029 **P**: yes (depends on Group 8 for expiry, tracked as cross-group)
   **Artifact**: distinguished error paths **TDD**: test-first, both negative cases
@@ -361,13 +370,13 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 8: Group 8 — Expiration
 
-- **T031** — Failing test: `expiresAt` future-validation at creation
+- [x] **T031** — Failing test: `expiresAt` future-validation at creation
   **Req**: FR-114 **Scn**: US1 AS4b **ADR**: — **Path**: `tests/contract/test_expiration.py`
   **Prereq**: T023 **Dep**: T023 **P**: no
   **Artifact**: failing test **TDD**: step 1–3 **Validation**: `uv run pytest tests/contract/test_expiration.py::test_future_validation -x`
   **Docs**: none **Trace**: FR-114 **Risk**: none **Done**: fails for expected reason **Human**: no
 
-- **T032** — Implement `expiresAt` validation + no-default-expiration behavior
+- [x] **T032** — Implement `expiresAt` validation + no-default-expiration behavior
   **Req**: FR-104, FR-114 **Scn**: US1 AS4/4a/4b **ADR**: — **Path**: `src/domain/validation.py`, `src/api/routers/short_links.py`
   **Prereq**: T031 **Dep**: T031 **P**: no
   **Artifact**: expiry logic **TDD**: step 4–7 **Validation**: `uv run pytest tests/contract/test_expiration.py`
@@ -375,7 +384,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: FR-112's "no re-run of the time-dependent future-check on idempotent replay" rule (Human Gate 3 correction) — must not regress here; covered by T033
   **Done**: no-expiration-by-default, future-only validation, both pass **Human**: no
 
-- **T033** [P] — Idempotent-replay-does-not-re-validate-expiresAt regression test
+- [x] **T033** [P] — Idempotent-replay-does-not-re-validate-expiresAt regression test
   **Req**: FR-112, FR-114 **Scn**: US1 AS11 **ADR**: — **Path**: `tests/contract/test_idempotency.py`
   **Prereq**: T027, T032 **Dep**: T027, T032 **P**: yes
   **Artifact**: regression test **TDD**: test-first for this exact corrected rule
@@ -390,7 +399,7 @@ reachable before continuing to exhaustive test-suite breadth.
 
 ## Phase 9: Group 9 — Analytics
 
-- **T034** — Post-response outbox write (ADR-0009's corrected ordering)
+- [x] **T034** — Post-response outbox write (ADR-0009's corrected ordering)
   **Req**: FR-105, FR-106 **Scn**: US1 AS10 **ADR**: ADR-0009 **Path**: `src/domain/analytics.py`, `src/api/routers/redirect.py`
   **Prereq**: T013, T029 **Dep**: T013, T029 **P**: no
   **Artifact**: post-send write, `BackgroundTasks`-based **TDD**: test-first — assert no count for an unsent response (the specific overcount defect this design exists to prevent)
@@ -399,7 +408,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: **highest-risk task in this group** — a regression here reintroduces the exact overcount bug Human Gate 4 caught; the ordering (write strictly after send) must never be "optimized" back to before-send
   **Done**: overcount test passes, `PVT-001` budget measured **Human**: no
 
-- **T035** — Drain worker (outbox → summary, idempotent by `event_id`)
+- [x] **T035** — Drain worker (outbox → summary, idempotent by `event_id`)
   **Req**: FR-107 **Scn**: — **ADR**: ADR-0009 **Path**: `src/domain/analytics.py`
   **Prereq**: T034 **Dep**: T034 **P**: no
   **Artifact**: background drain task **TDD**: test-first — kill mid-batch, assert no double-count
@@ -407,7 +416,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Docs**: none **Trace**: ADR-0009's `applied_events` uniqueness design
   **Risk**: none beyond what's already disclosed **Done**: dedup test passes **Human**: no
 
-- **T036** [P] — Three-state `completeness_status` (`complete`/`degraded`/`incomplete`)
+- [x] **T036** [P] — Three-state `completeness_status` (`complete`/`degraded`/`incomplete`)
   **Req**: FR-107 **Scn**: — **SC**: SC-001 **ADR**: ADR-0009 **Path**: `src/domain/analytics.py`
   **Prereq**: T035 **Dep**: T035 **P**: yes (independent of T037)
   **Artifact**: status transitions **TDD**: test-first, all 3 states + the one-way `incomplete` transition
@@ -415,7 +424,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Docs**: none **Trace**: ADR-0009
   **Risk**: `incomplete` must never auto-revert — guarded explicitly in the test **Done**: all transitions match ADR-0009 **Human**: no
 
-- **T037** [P] — `analytics_system_status`: unclean-shutdown detection, sticky flag, operator acknowledgment
+- [x] **T037** [P] — `analytics_system_status`: unclean-shutdown detection, sticky flag, operator acknowledgment
   **Req**: FR-117 **Scn**: — **ADR**: ADR-0009 **Path**: `src/observability/system_status.py`
   **Prereq**: T013 **Dep**: T013 **P**: yes (independent of T036)
   **Artifact**: startup/shutdown lifecycle hooks **TDD**: test-first — the exact spike-verified scenarios (crash-window, double-failure, ack-doesn't-restore)
@@ -424,7 +433,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: **the single most spec-scrutinized behavior in this project** — acknowledgment MUST NOT restore historical completeness; this exact property was the spike's headline finding and must not regress
   **Done**: all spike scenarios reproduce as real, passing tests **Human**: no
 
-- **T038** — Durable running-marker gate on request-serving
+- [x] **T038** — Durable running-marker gate on request-serving
   **Req**: FR-117 **Scn**: — **ADR**: ADR-0009 **Path**: `src/api/main.py`, `src/observability/system_status.py`
   **Prereq**: T037 **Dep**: T037 **P**: no
   **Artifact**: startup gate **TDD**: test-first — marker-write failure must prevent request-serving, not just log a warning
@@ -432,7 +441,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Docs**: none **Trace**: Human Gate 4 spike Scenario 4
   **Risk**: none beyond what's already disclosed **Done**: test passes **Human**: no
 
-- **T039** [P] — `PVT-001` bounded-overhead measurement (background task, not response-blocking)
+- [x] **T039** [P] — `PVT-001` bounded-overhead measurement (background task, not response-blocking)
   **Req**: FR-106 **Scn**: — **ADR**: ADR-0009 **Path**: `tests/analytics/test_budget.py`
   **Prereq**: T034 **Dep**: T034 **P**: yes
   **Artifact**: timing test **TDD**: n/a (measurement, not correctness) **Validation**: `uv run pytest tests/analytics/test_budget.py -v`
@@ -440,7 +449,7 @@ reachable before continuing to exhaustive test-suite breadth.
   **Risk**: do not overclaim this single test as p95 evidence — report it as one more sample, same caveat as the spike
   **Done**: measured and logged, still labeled unverified as a percentile claim **Human**: no
 
-- **T040** — MTTR instrumentation: timestamps, recovered-event population, exclusions
+- [x] **T040** — MTTR instrumentation: timestamps, recovered-event population, exclusions
   **Req**: — **Scn**: — **SC**: SC-004 **ADR**: ADR-0008 **Path**: `src/observability/metrics.py`
   **Prereq**: T080 (audit_events table, Group 26) **Dep**: T080 **P**: no
   **Artifact**: MTTR calculation function **TDD**: test-first — constructed recovered-failure sequence produces exact expected MTTR; unrecovered failures excluded from the denominator, reported separately
@@ -469,7 +478,7 @@ depend on T040.
 
 ## Phase 10: Group 10 — Validation and Security
 
-- **T041** — Idempotency-Key minimum-length enforcement
+- [x] **T041** — Idempotency-Key minimum-length enforcement
   **Req**: — **Scn**: — **ADR**: — **Path**: `src/domain/idempotency.py`
   **Prereq**: T027 **Dep**: T027 **P**: no
   **Artifact**: length check **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_idempotency_key_length.py`
@@ -477,7 +486,7 @@ depend on T040.
   **Risk**: disclosed limitation — no entropy check beyond length, caller's responsibility, stated in code comment near the check
   **Done**: rejects <16 chars **Human**: no
 
-- **T042** [P] — Private/internal-address rejection at creation time
+- [x] **T042** [P] — Private/internal-address rejection at creation time
   **Req**: — **Scn**: — **ADR**: — **Path**: `src/domain/validation.py`
   **Prereq**: T014 **Dep**: T014 **P**: yes
   **Artifact**: address-check **TDD**: test-first, including a positive test that a public address is accepted
@@ -486,7 +495,7 @@ depend on T040.
   **Risk**: **DNS-rebinding is explicitly NOT covered by this check** — code comment must state this, not just the plan doc
   **Done**: rejects loopback/private literals; comment discloses the rebinding gap **Human**: no
 
-- **T043** [P] — Rate limiting (`PVT-007`, 60 req/min/IP)
+- [x] **T043** [P] — Rate limiting (`PVT-007`, 60 req/min/IP)
   **Req**: — **Scn**: — **ADR**: — **Path**: `src/api/middleware/rate_limit.py`
   **Prereq**: T007 **Dep**: T007 **P**: yes
   **Artifact**: middleware **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_rate_limit.py`
@@ -494,7 +503,7 @@ depend on T040.
   **Risk**: none beyond standard rate-limiter false-positive risk at burst traffic — disclosed, not solved here
   **Done**: 61st request in a minute from one IP is rejected **Human**: no
 
-- **T044** — Dependency/secret scan (release-readiness input)
+- [x] **T044** — Dependency/secret scan (release-readiness input)
   **Req**: — **Scn**: — **ADR**: — **Path**: CI-equivalent local command, no new source file
   **Prereq**: T005 **Dep**: T005 **P**: no
   **Artifact**: scan report **TDD**: n/a **Validation**: `uv run pip-audit` (or equivalent) — exit code retained regardless of findings
@@ -507,28 +516,28 @@ depend on T040.
 
 ## Phase 11: Group 11 — Orchestration Domain
 
-- **T045** — `orchestration_workflow_instance`/`_stage`/`stage_dependency` schema
+- [x] **T045** — `orchestration_workflow_instance`/`_stage`/`stage_dependency` schema
   **Req**: FR-201–FR-206 **Scn**: — **ADR**: ADR-0005 **Path**: `src/persistence/schema.py`, `src/orchestration/models.py`
   **Prereq**: T004 **Dep**: T004 **P**: yes (independent package from Groups 3–10)
   **Artifact**: 3 tables + models **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_orchestration_models.py`
   **Docs**: data-model.md **Trace**: FR-201, ADR-0005
   **Risk**: this schema IS the "explicit dependency graph" the whole assessment measures — get it wrong and the central differentiator fails **Done**: matches data-model.md **Human**: no
 
-- **T046** — `orchestration_stage_execution` schema (durable execution identity)
+- [x] **T046** — `orchestration_stage_execution` schema (durable execution identity)
   **Req**: FR-606 **Scn**: — **ADR**: ADR-0005 **Path**: `src/persistence/schema.py`, `src/orchestration/models.py`
   **Prereq**: T045 **Dep**: T045 **P**: no
   **Artifact**: execution-identity table **TDD**: test-first **Validation**: `uv run pytest tests/unit/test_stage_execution_model.py`
   **Docs**: data-model.md **Trace**: ADR-0005 Rev. 3, Human Gate 4 spike (Scenario 2, all PASS)
   **Risk**: this is the exact mechanism the real subprocess-kill spike verified in isolation — the real implementation must match that verified logic, not diverge from it **Done**: matches data-model.md and the spike's verified schema **Human**: no
 
-- **T047** [P] — Agent-adapter `Protocol` interface (`effect_class`, `execute`, `check_effect`)
+- [x] **T047** [P] — Agent-adapter `Protocol` interface (`effect_class`, `execute`, `check_effect`)
   **Req**: — **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/adapters/base.py`
   **Prereq**: T046 **Dep**: T046 **P**: yes (independent of T048)
   **Artifact**: interface **TDD**: n/a (interface definition) **Validation**: `uv run mypy src/orchestration/adapters/base.py`
   **Docs**: ADR-0005 (already specifies this exact interface) **Trace**: ADR-0005 §Decision — Agent Adapters
   **Risk**: none **Done**: interface matches ADR-0005 verbatim **Human**: no
 
-- **T048** — Real `claude` CLI invocation wrapper (corrected mechanism)
+- [x] **T048** — Real `claude` CLI invocation wrapper (corrected mechanism)
   **Req**: — **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/adapters/claude_invoke.py`
   **Prereq**: T047 **Dep**: T047 **P**: no
   **Artifact**: subprocess wrapper **TDD**: test-first, using the **exact syntax the spike verified** (`cwd`-based, `--output-format json --permission-mode bypassPermissions`, no `--cwd` flag)
@@ -550,14 +559,14 @@ depend on T040.
 
 ## Phase 12: Group 12 — Compliance Policy Model and Policy Versioning
 
-- **T049** — `config/policies.yaml` manifest + loader
+- [x] **T049** — `config/policies.yaml` manifest + loader
   **Req**: — **Scn**: — **ADR**: — **Path**: `config/policies.yaml`, `src/policy/manifest.py`
   **Prereq**: T004 **Dep**: T004 **P**: yes (independent package)
   **Artifact**: manifest + loader **TDD**: test-first **Validation**: `uv run pytest tests/policy/test_manifest.py`
   **Docs**: research.md §8 (already specifies this design) **Trace**: Constitution Principle VI
   **Risk**: none **Done**: manifest parses, version field required **Human**: no
 
-- **T050** [P] — `policy_evaluation` schema
+- [x] **T050** [P] — `policy_evaluation` schema
   **Req**: FR-303 **Scn**: — **ADR**: — **Path**: `src/persistence/schema.py`, `src/policy/models.py`
   **Prereq**: T049 **Dep**: T049 **P**: yes
   **Artifact**: table + model **TDD**: test-first **Validation**: `uv run pytest tests/policy/test_evaluation_model.py`
@@ -569,13 +578,13 @@ depend on T040.
 
 ## Phase 13: Group 13 — Compliance Evaluation and Enforcement
 
-- **T051** — Policy-evaluation stage (produces `PASS`/`FAIL`/`EXCEPTION-REQUESTED`/`NOT-APPLICABLE`)
+- [x] **T051** — Policy-evaluation stage (produces `PASS`/`FAIL`/`EXCEPTION-REQUESTED`/`NOT-APPLICABLE`)
   **Req**: FR-303, FR-304 **Scn**: — **SC**: SC-006 **ADR**: — **Path**: `src/policy/evaluator.py`
   **Prereq**: T050 **Dep**: T050 **P**: no
   **Artifact**: evaluator **TDD**: test-first, all 4 outcomes **Validation**: `uv run pytest tests/policy/test_evaluator.py`
   **Docs**: none **Trace**: FR-303 **Risk**: none **Done**: all 4 outcomes producible **Human**: no
 
-- **T052** — `FAIL` mechanically blocks downstream progression
+- [x] **T052** — `FAIL` mechanically blocks downstream progression
   **Req**: FR-304 **Scn**: — **ADR**: — **Path**: `src/orchestration/scheduler.py` (integration point)
   **Prereq**: T051, T056 (scheduler eligibility query, Group 16) **Dep**: T051, T056 **P**: no
   **Artifact**: integration **TDD**: test-first — a `FAIL` policy stage's dependents never become `ready`
@@ -601,7 +610,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
 
 ## Phase 14: Group 14 — Policy Exception and Compensating-Control Workflow
 
-- **T053** — `policy_exception` schema + approval-gated creation
+- [x] **T053** — `policy_exception` schema + approval-gated creation
   **Req**: FR-305 **Scn**: — **ADR**: ADR-0006 **Path**: `src/persistence/schema.py`, `src/policy/exception.py`
   **Prereq**: T050, T065 (approval mechanism, Group 19) **Dep**: T050 **P**: no
   **Artifact**: table + workflow **TDD**: test-first, all required fields (policy, reason, scope, authority, compensating control, timestamp, expiry)
@@ -619,7 +628,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   here; the gating behavior cannot be exercised end-to-end until T065 lands.
   **Done**: all fields required, expiry enforced **Human**: yes — exception creation requires the approval mechanism from Group 19
 
-- **T054** [P] — Expired-exception-treated-as-failure test
+- [x] **T054** [P] — Expired-exception-treated-as-failure test
   **Req**: FR-305 **Scn**: — **ADR**: — **Path**: `tests/policy/test_exception_expiry.py`
   **Prereq**: T053 **Dep**: T053 **P**: yes
   **Artifact**: test **TDD**: test-first **Validation**: `uv run pytest tests/policy/test_exception_expiry.py`
@@ -631,7 +640,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
 
 ## Phase 15: Group 15 — Change-Control and Downstream Impact Analysis
 
-- **T055** — Material-change detector (requirements/architecture/schema/workflow/security/release-criteria)
+- [x] **T055** — Material-change detector (requirements/architecture/schema/workflow/security/release-criteria)
   **Req**: FR-306 **Scn**: Scenario B **ADR**: — **Path**: `src/orchestration/replanning.py`
   **Prereq**: T045, T051 **Dep**: T045 **P**: no
   **Artifact**: change-classification function **TDD**: test-first, each of the 6 listed change types
@@ -644,7 +653,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
 
 ## Phase 16: Group 16 — Dependency Graph
 
-- **T056** — Scheduler eligibility query (the actual "is this stage ready" logic)
+- [x] **T056** — Scheduler eligibility query (the actual "is this stage ready" logic)
   **Req**: FR-201, FR-202 **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/scheduler.py`
   **Prereq**: T045 **Dep**: T045 **P**: no
   **Artifact**: eligibility query **TDD**: test-first — a stage becomes `ready` only when every dependency edge resolves to `succeeded`
@@ -653,7 +662,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Risk**: **this single query is what separates real orchestration from linear chaining disguised as orchestration** — the guide's explicit failure trap
   **Done**: forward-progress test passes for a known-good graph **Human**: no
 
-- **T057** [P] — Real parallel dispatch + synchronization event (the concrete DAG example)
+- [x] **T057** [P] — Real parallel dispatch + synchronization event (the concrete DAG example)
   **Req**: FR-202 **Scn**: US2 AS3 **ADR**: ADR-0005 **Path**: `src/orchestration/scheduler.py`
   **Prereq**: T056 **Dep**: T056 **P**: yes (independent test file from T058)
   **Artifact**: `asyncio.gather`-based dispatch **TDD**: test-first — two independent stages actually run concurrently (observable via overlapping timestamps), synchronization event recorded
@@ -668,7 +677,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
 
 ## Phase 17: Group 17 — Workflow State Machine
 
-- **T058** — Atomic claiming (compare-and-swap `UPDATE ... WHERE status='ready'`)
+- [x] **T058** — Atomic claiming (compare-and-swap `UPDATE ... WHERE status='ready'`)
   **Req**: FR-201 **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/scheduler.py`
   **Prereq**: T046, T056 **Dep**: T046, T056 **P**: no
   **Artifact**: CAS claim statement **TDD**: test-first — concurrent claim attempts, exactly one wins
@@ -677,7 +686,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Risk**: none beyond what the spike already verified in isolation — this task is "make the spike's proven logic real"
   **Done**: concurrent-claim test passes **Human**: no
 
-- **T059** — Lease + dual-trigger reaper (event-triggered AND periodic)
+- [x] **T059** — Lease + dual-trigger reaper (event-triggered AND periodic)
   **Req**: — **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/reaper.py`
   **Prereq**: T058 **Dep**: T058 **P**: no
   **Artifact**: reaper routine **TDD**: test-first — **specifically the "zero other transitions occurring" case Round 3 caught as missing**
@@ -686,7 +695,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Risk**: this is a previously-identified gap (Round 2 missed it) — the test must specifically construct the no-other-transitions scenario, not just a generic reaper test
   **Done**: periodic-only trigger test passes **Human**: no
 
-- **T060** — Effect reconciliation (`check_effect()` on exception/timeout/stale-lease)
+- [x] **T060** — Effect reconciliation (`check_effect()` on exception/timeout/stale-lease)
   **Req**: FR-401 (added during `/speckit-analyze` rerun, 2026-09-10 —
   narrowing T070/T020 away from a broad FR-401–406 citation left FR-401
   itself uncited by any task, a gap the rerun caught. This reconciliation
@@ -702,7 +711,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Risk**: **this is the corrected core of the whole recovery model** — the Round 2→3 finding that an in-band exception was wrongly assumed safe must not silently regress back into the codebase
   **Done**: all 3 spike-equivalent scenarios pass as real integration tests against real code, not the isolated simulation **Human**: no
 
-- **T061** [P] — Isolated `git worktree` per execution + controller-only promotion
+- [x] **T061** [P] — Isolated `git worktree` per execution + controller-only promotion
   **Req**: — **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/workspace.py`
   **Prereq**: T060 **Dep**: T060 **P**: yes (independent of T062)
   **Artifact**: worktree lifecycle + promotion gate **TDD**: test-first — a stale execution's output is never promoted (fencing + validator + revision match all required)
@@ -711,7 +720,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Risk**: this is the actual fix for "fencing a DB row doesn't stop a zombie's real file effects" — the promotion gate is the load-bearing control here, not the DB fence alone
   **Done**: stale-execution non-promotion test passes **Human**: no
 
-- **T062** [P] — Executable postcondition validators + retained artifact-hash evidence
+- [x] **T062** [P] — Executable postcondition validators + retained artifact-hash evidence
   **Req**: FR-606 **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/validators.py`
   **Prereq**: T046 **Dep**: T046 **P**: yes
   **Artifact**: validator-run + evidence-recording logic **TDD**: test-first — `succeeded` unreachable without an actually-run, actually-passing validator
@@ -726,7 +735,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
 
 ## Phase 18: Group 18 — Context and Decision Lineage
 
-- **T063** — Append-only `orchestration_decision_lineage` writer
+- [x] **T063** — Append-only `orchestration_decision_lineage` writer
   **Req**: FR-503 **Scn**: — **ADR**: — **Path**: `src/orchestration/lineage.py`
   **Prereq**: T045 **Dep**: T045 **P**: no
   **Artifact**: append-only writer (no UPDATE/DELETE code path) **TDD**: test-first **Validation**: `uv run pytest tests/orchestration/test_lineage.py`
@@ -739,7 +748,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   existed in plan.md §4 and has been corrected there too.
   **Done**: append works, no update/delete function exists **Human**: no
 
-- **T064** [P] — Artifact-revision tracking on every stage/approval
+- [x] **T064** [P] — Artifact-revision tracking on every stage/approval
   **Req**: FR-311, FR-501 **Scn**: — **ADR**: — **Path**: `src/orchestration/models.py`
   **Prereq**: T063 **Dep**: T063 **P**: yes
   **Artifact**: revision field wiring **TDD**: test-first **Validation**: `uv run pytest tests/orchestration/test_revision_tracking.py`
@@ -751,7 +760,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
 
 ## Phase 19: Group 19 — Approval Gates
 
-- **T065** — Role-checked approval endpoints (`reviewer_approver`/`release_owner`)
+- [x] **T065** — Role-checked approval endpoints (`reviewer_approver`/`release_owner`)
   **Req**: FR-307, FR-310, FR-312, FR-313 **Scn**: US3, US4 **SC**: SC-005 **ADR**: ADR-0006 **Path**: `src/api/routers/approvals.py`
   **Prereq**: T064 **Dep**: T064 **P**: no
   **Artifact**: approval endpoints **TDD**: test-first — both roles, both gate
@@ -776,7 +785,7 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   `artifact_revision`.
   **Human**: no (the endpoint itself doesn't need a human gate to *build*)
 
-- **T066** — Verified-credential identity derivation (not caller-supplied name)
+- [x] **T066** — Verified-credential identity derivation (not caller-supplied name)
   **Req**: FR-308 **Scn**: — **ADR**: ADR-0006 **Path**: `src/api/auth.py`
   **Prereq**: T065 **Dep**: T065 **P**: no
   **Artifact**: auth dependency **TDD**: test-first **Validation**: `uv run pytest tests/contract/test_auth.py`
@@ -784,19 +793,19 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Risk**: **BLOCKED-adjacent**: the specific credential-*storage* isolation mechanism (separate OS user, sandbox, etc.) is unresolved (ADR-0006 Rejected). This task implements verified-credential-derivation using whatever mechanism is available now (e.g., static hashed tokens per ADR-0006 Revision 3's baseline layer), explicitly **not** claiming the rejected OS-isolation guarantee. Documented as an accepted limitation, not silently upgraded.
   **Done**: derives identity from a verified token, never a request field named "name" **Human**: yes — accepting this interim posture (token-based, without OS-level agent isolation) as the demonstrable mechanism for now is itself worth your explicit sign-off before Group 19 is considered "done enough" for a scenario demo
 
-- **T067** [P] — Agent-originated approval unconditional rejection
+- [x] **T067** [P] — Agent-originated approval unconditional rejection
   **Req**: FR-309 **Scn**: US3 AS7 **ADR**: ADR-0006 **Path**: `src/api/auth.py`
   **Prereq**: T066 **Dep**: T066 **P**: yes (independent of T068)
   **Artifact**: agent-identity block **TDD**: test-first **Validation**: `uv run pytest tests/contract/test_approvals.py::test_agent_rejected`
   **Docs**: none **Trace**: FR-309 **Risk**: none beyond T066's disclosed limitation **Done**: any agent-flagged identity rejected at any gate **Human**: no
 
-- **T068** [P] — Revision-binding + invalidation on replan
+- [x] **T068** [P] — Revision-binding + invalidation on replan
   **Req**: FR-311, FR-501 **Scn**: US4 **ADR**: — **Path**: `src/api/routers/approvals.py`
   **Prereq**: T064, T055 **Dep**: T064 **P**: yes
   **Artifact**: binding + invalidation logic **TDD**: test-first — replanning invalidates exactly the affected approvals **Validation**: `uv run pytest tests/orchestration/test_approval_invalidation.py`
   **Docs**: none **Trace**: FR-311, FR-501 **Risk**: none **Done**: test passes **Human**: no
 
-- **T069** — Approval-timeout/escalation (`PVT-006`: 24h gate / 60s demo)
+- [x] **T069** — Approval-timeout/escalation (`PVT-006`: 24h gate / 60s demo)
   **Req**: FR-302 **Scn**: — **ADR**: — **Path**: `src/orchestration/scheduler.py`
   **Prereq**: T065 **Dep**: T065 **P**: no
   **Artifact**: timeout handling **TDD**: test-first — timeout never treated as approval **Validation**: `uv run pytest tests/orchestration/test_approval_timeout.py`
@@ -816,7 +825,7 @@ documented fail-closed interim posture (token-based verified-identity
 derivation, explicitly not claiming OS-level isolation). **No runtime agent
 subprocess may launch without an accepted and verified isolation boundary.**
 
-- **T100** — [BLOCKED] `scripts/bootstrap_credentials.py` (approver credential provisioning)
+- [ ] **T100** — [BLOCKED] `scripts/bootstrap_credentials.py` (approver credential provisioning)
   **Req**: FR-308 **Scn**: — **ADR**: ADR-0006 **Path**: `scripts/bootstrap_credentials.py`
   **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
   **Artifact**: none yet — blocked **TDD**: n/a — blocked
@@ -825,7 +834,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Risk**: **BLOCKED — do not implement.** ADR-0006's credential-isolation mechanism remains Rejected (macOS `sandbox-exec` spike-FAILED; Option A spike designed but never executed, no privileged command run). Building this script now would create a real code path that provisions approver credentials with no accepted isolation boundary protecting them — exactly the risk ADR-0006 exists to prevent.
   **Done**: N/A while blocked — completion criteria to be defined alongside the accepted replacement mechanism **Human**: yes — blocked pending your ADR-0006 replacement decision; must not be started by an agent under any autonomous-execution authorization
 
-- **T101** — [BLOCKED] `scripts/approve.py` (the sole code path that reads raw approver credentials)
+- [ ] **T101** — [BLOCKED] `scripts/approve.py` (the sole code path that reads raw approver credentials)
   **Req**: FR-308, FR-309 **Scn**: — **ADR**: ADR-0006 **Path**: `scripts/approve.py`
   **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
   **Artifact**: none yet — blocked **TDD**: n/a — blocked
@@ -834,7 +843,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Risk**: **BLOCKED — do not implement.** Same posture as T100, and higher-stakes: plan.md names this specifically as "the only code path that reads raw approver credentials." Building it without an accepted isolation boundary is the single highest-risk file this project could produce; must not be attempted under any bounded autonomous task-group execution.
   **Done**: N/A while blocked **Human**: yes — blocked pending your ADR-0006 replacement decision; must not be started by an agent under any autonomous-execution authorization
 
-- **T102** — [BLOCKED] `local-secrets/` directory setup and file permissions
+- [ ] **T102** — [BLOCKED] `local-secrets/` directory setup and file permissions
   **Req**: — **Scn**: — **ADR**: ADR-0006 **Path**: `local-secrets/`
   **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
   **Artifact**: none yet — blocked **TDD**: n/a — blocked
@@ -843,7 +852,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Risk**: **BLOCKED — do not implement.** Even setting file/directory permission bits here would be meaningless (and could create a false sense of security) without the OS-level isolation boundary ADR-0006 was supposed to provide around whatever this directory holds.
   **Done**: N/A while blocked **Human**: yes — blocked pending your ADR-0006 replacement decision; must not be started by an agent under any autonomous-execution authorization
 
-- **T103** — [BLOCKED] Final agent-isolation launcher + its security tests
+- [ ] **T103** — [BLOCKED] Final agent-isolation launcher + its security tests
   **Req**: — **Scn**: — **ADR**: ADR-0006 **Path**: TBD — depends on which replacement mechanism you eventually accept (Option A separate-OS-user, or an alternative)
   **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
   **Artifact**: none yet — blocked **TDD**: n/a — blocked
@@ -858,7 +867,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 20: Group 20 — Retry and Timeout
 
-- **T070** — Retry-safety gate (idempotent-vs-uncertain, reconciliation-required)
+- [x] **T070** — Retry-safety gate (idempotent-vs-uncertain, reconciliation-required)
   **Req**: FR-406 (added during `/speckit-analyze` remediation, 2026-09-10,
   finding E1 — narrowly, not a broad FR-401–406 citation: this gate exists to
   make "workflow stage retries" — FR-406's own named example of a repeatable
@@ -871,7 +880,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Artifact**: retry-issuance gate **TDD**: test-first — an `externally_observable_uncertain` stage never retries without a `not_completed` reconciliation result **Validation**: `uv run pytest tests/orchestration/test_retry_safety.py`
   **Docs**: ADR-0007 (already corrected from the withdrawn "in-band exception is automatically safe" claim) **Trace**: ADR-0007 Rev. 3 finding #11, FR-406 **Risk**: this is the exact defect Round 3 fixed — a regression here reopens it **Done**: gate enforced for every retry path **Human**: no
 
-- **T071** [P] — Corrected backoff (3 attempts, 1s+2s waits)
+- [x] **T071** [P] — Corrected backoff (3 attempts, 1s+2s waits)
   **Req**: FR-402 (added during `/speckit-analyze` remediation, 2026-09-10,
   finding E1 — FR-402's own text is "explicit maximum attempt count and
   explicit backoff/timeout behavior," which is exactly this task's subject)
@@ -880,7 +889,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Artifact**: backoff schedule **TDD**: test-first, exact timing assertions **Validation**: `uv run pytest tests/orchestration/test_backoff_timing.py`
   **Docs**: ADR-0007 (already corrected from the miscounted "1s/2s/4s") **Trace**: `PVT-002`, provisionally approved, unverified, FR-402 **Risk**: none beyond the miscounting Round 3 already caught **Done**: exactly 2 waits observed across 3 attempts **Human**: no
 
-- **T072** [P] — Realistic per-subprocess timeouts (5s/300s/600s)
+- [x] **T072** [P] — Realistic per-subprocess timeouts (5s/300s/600s)
   **Req**: FR-402 (added during `/speckit-analyze` remediation, 2026-09-10,
   finding E1 — the "timeout" half of FR-402's shared attempt-count/timeout
   requirement, split from T071's "attempt-count/backoff" half; both
@@ -902,7 +911,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 21: Group 21 — Fallback
 
-- **T073** — Fallback-on-`failed_permanent` (defined per stage or safe-stop)
+- [x] **T073** — Fallback-on-`failed_permanent` (defined per stage or safe-stop)
   **Req**: FR-403 (added during `/speckit-analyze` remediation, 2026-09-10,
   finding E1 — FR-403 names exactly this: "exhausting the bounded retry limit
   without recovery MUST lead to a deterministic terminal outcome (fallback,
@@ -918,7 +927,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 22: Group 22 — Rollback or Compensation
 
-- **T074** — Per-operation-class rollback/compensation dispatch
+- [x] **T074** — Per-operation-class rollback/compensation dispatch
   **Req**: FR-404 (added during `/speckit-analyze` remediation, 2026-09-10,
   finding E1 — FR-404 is precisely this task's subject: distinguishing
   rollback from compensation and using compensation wherever rollback is not
@@ -935,7 +944,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 23: Group 23 — Safe-Stop
 
-- **T075** — Safe-stop triggers (retry exhaustion, unresolved policy FAIL, stuck reconciliation)
+- [x] **T075** — Safe-stop triggers (retry exhaustion, unresolved policy FAIL, stuck reconciliation)
   **Req**: FR-403, FR-405 (added during `/speckit-analyze` remediation,
   2026-09-10, finding E1 — FR-405 defines the safe-stop state itself
   ["continuing execution would be unsafe... exhausted retries with no valid
@@ -947,7 +956,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Artifact**: safe-stop transition logic **TDD**: test-first, all 3 triggers individually **Validation**: `uv run pytest tests/orchestration/test_safe_stop.py`
   **Docs**: ADR-0007 **Trace**: ADR-0007, FR-403, FR-405 **Risk**: none **Done**: all 3 triggers correctly reach `safe_stopped`, never a hang **Human**: no
 
-- **T076** [P] — Safe-stop resumable only via explicit authorized action
+- [x] **T076** [P] — Safe-stop resumable only via explicit authorized action
   **Req**: FR-405 (added during `/speckit-analyze` remediation, 2026-09-10,
   finding E1 — FR-405's own text: "MUST NOT continue processing the affected
   workflow path past that point without explicit human direction," which is
@@ -963,7 +972,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 24: Group 24 — Resume and Recovery
 
-- **T077** — Restart-recovery (unblocks T021)
+- [x] **T077** — Restart-recovery (unblocks T021)
   **Req**: FR-204, FR-205 **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/scheduler.py` (startup routine)
   **Prereq**: T059 **Dep**: T059 **P**: no
   **Artifact**: startup recovery routine **TDD**: satisfies T021's previously-xfail test **Validation**: `uv run pytest tests/persistence/test_restart_recovery.py`
@@ -975,13 +984,13 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 25: Group 25 — Dynamic Replanning
 
-- **T078** — Invalidation cascade on material change (uses T055's detector)
+- [x] **T078** — Invalidation cascade on material change (uses T055's detector)
   **Req**: FR-501, FR-502 **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/replanning.py`
   **Prereq**: T055, T068 **Dep**: T055, T068 **P**: no
   **Artifact**: cascade logic **TDD**: test-first — exactly the affected stages/approvals invalidated, none broader **Validation**: `uv run pytest tests/orchestration/test_replanning_cascade.py`
   **Docs**: none **Trace**: FR-501/502 **Risk**: none **Done**: test passes **Human**: no
 
-- **T079** [P] — In-progress worktree invalidation on replan
+- [x] **T079** [P] — In-progress worktree invalidation on replan
   **Req**: — **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/workspace.py`
   **Prereq**: T061, T078 **Dep**: T061, T078 **P**: yes
   **Artifact**: invalidation hook into T061's promotion gate **TDD**: test-first **Validation**: `uv run pytest tests/orchestration/test_replan_worktree_invalidation.py`
@@ -993,13 +1002,13 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 26: Group 26 — Audit Trail
 
-- **T080** — `audit_events` append-only writer, all required fields
+- [x] **T080** — `audit_events` append-only writer, all required fields
   **Req**: FR-601, FR-602 **Scn**: — **SC**: SC-003 **ADR**: ADR-0008 **Path**: `src/observability/audit.py`
   **Prereq**: T045 **Dep**: T045 **P**: no
   **Artifact**: audit writer **TDD**: test-first, all 6 required fields present on every event **Validation**: `uv run pytest tests/observability/test_audit.py`
   **Docs**: data-model.md **Trace**: FR-601/602 **Risk**: none beyond convention-level append-only enforcement, disclosed **Done**: fields complete on every write path **Human**: no
 
-- **T081** [P] — Correlation-ID linkage (`workflow_instance.id` reused, not a separate scheme)
+- [x] **T081** [P] — Correlation-ID linkage (`workflow_instance.id` reused, not a separate scheme)
   **Req**: FR-601 **Scn**: — **ADR**: — **Path**: `src/observability/audit.py`
   **Prereq**: T080 **Dep**: T080 **P**: yes
   **Artifact**: linkage **TDD**: test-first **Validation**: `uv run pytest tests/observability/test_correlation.py`
@@ -1011,7 +1020,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 27: Group 27 — Logs, Metrics, and Traces
 
-- **T082** — `/metrics/reliability` endpoint (success/failure rate, retry frequency, rollback frequency)
+- [x] **T082** — `/metrics/reliability` endpoint (success/failure rate, retry frequency, rollback frequency)
   **Req**: FR-603 **Scn**: — **ADR**: ADR-0008 **Path**: `src/api/routers/metrics.py`
   **Prereq**: T080, T040 **Dep**: T080, T040 **P**: no
   **Artifact**: endpoint **TDD**: test-first **Validation**: `uv run pytest tests/contract/test_metrics.py`
@@ -1019,7 +1028,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
   **Risk**: must always set `demonstration_data: true` — a missing flag would violate FR-604's explicit prohibition on presenting demo metrics as production stats
   **Done**: all listed metrics computable, flag always true **Human**: no
 
-- **T083** [P] — Operational health signal for analytics degradation (independent of per-code status)
+- [x] **T083** [P] — Operational health signal for analytics degradation (independent of per-code status)
   **Req**: FR-115 **Scn**: — **ADR**: — **Path**: `src/api/routers/health.py`
   **Prereq**: T037 **Dep**: T037 **P**: yes
   **Artifact**: `/health` analytics sub-object, including `degraded_since_unclean_shutdown_at` **TDD**: test-first **Validation**: `uv run pytest tests/contract/test_health.py::test_analytics_degradation`
@@ -1031,7 +1040,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 28: Group 28 — Greenfield Scenario
 
-- **T084** — `scripts/demo_greenfield.py`
+- [x] **T084** — `scripts/demo_greenfield.py`
   **Req**: FR-601, FR-605 **Scn**: Scenario A **SC**: SC-002 **ADR**: — **Path**: `scripts/demo_greenfield.py`
   **Prereq**: all of Groups 1–27 **Dep**: T056, T065 **P**: no
   **Artifact**: runnable demo script **TDD**: end-to-end test wrapping the script **Validation**: `uv run python3 scripts/demo_greenfield.py && uv run pytest tests/e2e/test_greenfield.py`
@@ -1045,7 +1054,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 29: Group 29 — Brownfield Scenario
 
-- **T085** — `scripts/demo_brownfield.py` + mandatory pre-change impact analysis
+- [x] **T085** — `scripts/demo_brownfield.py` + mandatory pre-change impact analysis
   **Req**: FR-605 **Scn**: Scenario B **SC**: SC-002 **ADR**: — **Path**: `scripts/demo_brownfield.py`
   **Prereq**: Group 28 **Dep**: T078 **P**: no
   **Artifact**: runnable demo + impact-analysis record **TDD**: end-to-end test **Validation**: `uv run python3 scripts/demo_brownfield.py && uv run pytest tests/e2e/test_brownfield.py`
@@ -1059,7 +1068,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 30: Group 30 — Ambiguous Requirement Scenario
 
-- **T086** — `scripts/demo_ambiguous.py`
+- [x] **T086** — `scripts/demo_ambiguous.py`
   **Req**: FR-605 **Scn**: Scenario C **SC**: SC-002 **ADR**: — **Path**: `scripts/demo_ambiguous.py`
   **Prereq**: Group 29 **Dep**: T069 **P**: no
   **Artifact**: runnable demo **TDD**: end-to-end test, including the real approval-gate pause (never auto-approved) **Validation**: `uv run pytest tests/e2e/test_ambiguous.py`
@@ -1073,7 +1082,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 31: Group 31 — Unit Tests
 
-- **T087** [P] — Domain unit-test coverage sweep (fills gaps beyond the TDD-paired tests already written in Groups 6–10)
+- [x] **T087** [P] — Domain unit-test coverage sweep (fills gaps beyond the TDD-paired tests already written in Groups 6–10)
   **Req**: FR-101–FR-117 **Scn**: — **ADR**: — **Path**: `tests/unit/`
   **Prereq**: Groups 6–10 **Dep**: T044 **P**: yes
   **Artifact**: coverage report **TDD**: n/a (gap-filling, not new TDD cycles) **Validation**: `uv run pytest tests/unit/ --cov=src/domain`
@@ -1085,7 +1094,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 32: Group 32 — Contract Tests
 
-- **T088** [P] — Full contract-test sweep against `contracts/openapi.yaml`
+- [x] **T088** [P] — Full contract-test sweep against `contracts/openapi.yaml`
   **Req**: — **Scn**: — **ADR**: — **Path**: `tests/contract/`
   **Prereq**: T018 **Dep**: T018 **P**: yes
   **Artifact**: full suite run **TDD**: n/a (sweep) **Validation**: `uv run pytest tests/contract/`
@@ -1095,7 +1104,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 33: Group 33 — Integration Tests
 
-- **T089** [P] — Cross-package integration sweep (domain + orchestration + policy + observability together)
+- [x] **T089** [P] — Cross-package integration sweep (domain + orchestration + policy + observability together)
   **Req**: — **Scn**: — **ADR**: — **Path**: `tests/integration/`
   **Prereq**: Groups 1–27 **Dep**: T084 **P**: yes
   **Artifact**: integration suite **TDD**: n/a **Validation**: `uv run pytest tests/integration/`
@@ -1105,7 +1114,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 34: Group 34 — Orchestration Tests
 
-- **T090** — Full orchestration state-transition sweep (this is the Phase 0 stop-condition gate)
+- [x] **T090** — Full orchestration state-transition sweep (this is the Phase 0 stop-condition gate)
   **Req**: FR-201–FR-606 **Scn**: — **ADR**: ADR-0005 **Path**: `tests/orchestration/`
   **Prereq**: Groups 11–27 **Dep**: T060, T083 **P**: no
   **Artifact**: full sweep **TDD**: n/a (sweep of already-TDD'd pieces) **Validation**: `uv run pytest tests/orchestration/`
@@ -1123,7 +1132,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 35: Group 35 — Security Tests
 
-- **T091** [P] — Malicious-input/abuse-case sweep
+- [x] **T091** [P] — Malicious-input/abuse-case sweep
   **Req**: — **Scn**: — **ADR**: — **Path**: `tests/security/`
   **Prereq**: T041–T044 **Dep**: T042 **P**: yes
   **Artifact**: security test suite **TDD**: n/a (sweep) **Validation**: `uv run pytest tests/security/`
@@ -1133,7 +1142,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 36: Group 36 — End-to-End Tests
 
-- **T092** — Full golden-path + three-scenario end-to-end sweep
+- [x] **T092** — Full golden-path + three-scenario end-to-end sweep
   **Req**: — **Scn**: US1–US5, Scenarios A/B/C **ADR**: — **Path**: `tests/e2e/`
   **Prereq**: Groups 28–30 **Dep**: T084, T085, T086 **P**: no
   **Artifact**: e2e suite **TDD**: n/a **Validation**: `uv run pytest tests/e2e/`
@@ -1145,14 +1154,14 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 37: Group 37 — Documentation
 
-- **T093** — Reconcile `quickstart.md` from "planned" to real, executed commands
+- [x] **T093** — Reconcile `quickstart.md` from "planned" to real, executed commands
   **Req**: — **Scn**: — **ADR**: — **Path**: `specs/001-governed-url-shortener/quickstart.md`
   **Prereq**: T092 **Dep**: T092 **P**: no
   **Artifact**: updated quickstart **TDD**: n/a **Validation**: fresh-clone run of every documented command, output retained
   **Docs**: this task IS the doc update **Trace**: Constitution Principle X (docs evolve with implementation)
   **Risk**: none **Done**: no command in quickstart.md is still labeled "planned" **Human**: no
 
-- **T094** [P] — README (repository-root reviewer entry point)
+- [x] **T094** [P] — README (repository-root reviewer entry point)
   **Req**: — **Scn**: — **ADR**: — **Path**: `README.md`
   **Prereq**: T093 **Dep**: T093 **P**: yes
   **Artifact**: README **TDD**: n/a **Validation**: reviewer inspection
@@ -1162,7 +1171,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 38: Group 38 — Setup and Quick Start
 
-- **T095** — Fresh-clone verification (guide Section 27, step 61)
+- [x] **T095** — Fresh-clone verification (guide Section 27, step 61)
   **Req**: — **Scn**: — **ADR**: ADR-0010 **Path**: n/a (procedure)
   **Prereq**: T093 **Dep**: T093 **P**: no
   **Artifact**: verification log **TDD**: n/a **Validation**: clone into a clean directory, run quickstart.md verbatim, retain output
@@ -1172,7 +1181,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 39: Group 39 — Release-Readiness Validation
 
-- **T096** — Run the corrected release-readiness rule against actual state
+- [x] **T096** — Run the corrected release-readiness rule against actual state
   **Req**: FR-301–FR-306 **Scn**: — **SC**: SC-006 **ADR**: — **Path**: n/a (procedure, `/speckit-analyze`/`/speckit-converge` territory)
   **Prereq**: Groups 1–38 **Dep**: T090, T092 **P**: no
   **Artifact**: readiness determination **TDD**: n/a **Validation**: every mandatory gate/scenario/control checked against the plan.md-corrected rule (no delivery-bucket exemption)
@@ -1184,7 +1193,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 40: Group 40 — Final Engineering Summary
 
-- **T097** — Draft the mandatory 21-section summary (guide Section 25)
+- [x] **T097** — Draft the mandatory 21-section summary (guide Section 25)
   **Req**: — **Scn**: — **ADR**: — **Path**: `docs/final-engineering-summary.md` (not yet created)
   **Prereq**: T096 **Dep**: T096 **P**: no
   **Artifact**: 21-section document **TDD**: n/a **Validation**: reviewer inspection against the guide's exact section list
@@ -1192,7 +1201,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 41: Group 41 — Traceability Matrix
 
-- **T098** [P] — Requirement→Scenario→Design→ADR→Task→Code→Test→Evidence matrix
+- [x] **T098** [P] — Requirement→Scenario→Design→ADR→Task→Code→Test→Evidence matrix
   **Req**: — **Scn**: — **SC**: SC-003 **ADR**: — **Path**: `docs/traceability-matrix.md` (not yet created)
   **Prereq**: T097 **Dep**: T090 **P**: yes
   **Artifact**: matrix **TDD**: n/a **Validation**: spot-check 10 random FR IDs trace end-to-end
@@ -1200,7 +1209,7 @@ subprocess may launch without an accepted and verified isolation boundary.**
 
 ## Phase 42: Group 42 — Reviewer Navigation Guide
 
-- **T099** [P] — Reviewer navigation guide (guide Section 26)
+- [x] **T099** [P] — Reviewer navigation guide (guide Section 26)
   **Req**: — **Scn**: — **ADR**: — **Path**: `docs/reviewer-navigation-guide.md` (not yet created)
   **Prereq**: T097, T098 **Dep**: T097 **P**: yes
   **Artifact**: navigation guide **TDD**: n/a **Validation**: a reviewer following it can locate every required artifact within the guide's own checklist
