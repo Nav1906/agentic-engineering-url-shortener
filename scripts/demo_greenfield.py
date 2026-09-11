@@ -43,7 +43,7 @@ def main() -> None:
         compute_ready_stages,
         mark_ready,
     )
-    from src.policy.evaluator import evaluate_policy
+    from src.policy.live import is_release_ready, run_mandatory_policy_checks
 
     requirement = (
         "Expose a workflow's audit trail and policy-evaluation history via "
@@ -97,12 +97,14 @@ def main() -> None:
                      "succeeded", f"{name} completed for greenfield requirement", workflow_instance_id=wf)
         print(f"[3] Stage '{name}' -> succeeded")
 
-    # Step 3: change-control policy evaluation (additive contract change).
-    evaluate_policy(
-        conn, "change-control", "1.0.0",
-        lambda: "PASS", workflow_instance_id=wf,
-    )
-    print("[4] Policy 'change-control' -> PASS (additive, already-contracted endpoints)")
+    # Step 3 (T105, SC-006): ALL mandatory policies evaluated automatically
+    # for this workflow, tied to its artifact_revision -- not a single
+    # manually-chosen check.
+    outcomes = run_mandatory_policy_checks(conn, wf, "v1")
+    print(f"[4] Mandatory policy checks (automatic, all {len(outcomes)}): {outcomes}")
+    ready, reasons = is_release_ready(conn, wf, "v1")
+    print(f"[4b] is_release_ready: {ready}" + (f" -- blocked by: {reasons}" if reasons else ""))
+    assert ready is True, f"expected this additive, no-material-change workflow to be release-ready: {reasons}"
 
     conn.execute("UPDATE orchestration_workflow_instance SET status='completed' WHERE id=?", (wf,))
     conn.commit()

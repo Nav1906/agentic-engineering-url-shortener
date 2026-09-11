@@ -15,16 +15,21 @@ def evaluate_policy(
     policy_version: str,
     check_fn: Callable[[], Outcome],
     workflow_instance_id: str | None = None,
+    artifact_revision: str | None = None,
 ) -> int:
     """FR-303: every applicable check records exactly one outcome together
     with the policy version evaluated — no path runs a policy check without
-    a recorded version."""
+    a recorded version. T105: also records the artifact_revision this
+    evaluation applies to, so a later revision bump (replanning) can be
+    detected as making the evaluation stale — see
+    src/policy/live.py::is_release_ready."""
     outcome = check_fn()
     now = datetime.now(UTC).isoformat()
     cur = conn.execute(
-        "INSERT INTO policy_evaluation (workflow_instance_id, policy_id, policy_version, outcome, evaluated_at) "
-        "VALUES (?,?,?,?,?)",
-        (workflow_instance_id, policy_id, policy_version, outcome, now),
+        "INSERT INTO policy_evaluation "
+        "(workflow_instance_id, policy_id, policy_version, artifact_revision, outcome, evaluated_at) "
+        "VALUES (?,?,?,?,?,?)",
+        (workflow_instance_id, policy_id, policy_version, artifact_revision, outcome, now),
     )
     conn.commit()
     return cur.lastrowid  # type: ignore[return-value]

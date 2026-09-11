@@ -1257,6 +1257,46 @@ subprocess may launch without an accepted and verified isolation boundary.**
   unchanged; only the task count within Group 19 grew.
 - Before any of this executes, per the constitution's task-group boundary: one coherent group + its tests + its documentation + its traceability update, then stop, inspect, and commit — not an unbounded run across this whole file.
 
+## Phase 43: Group 43 — Post-Implementation Gap Closure
+
+**Added 2026-09-11**, after the Final Engineering Summary (T097) honestly
+disclosed three genuinely-incomplete items rather than inflating the
+release determination — these three tasks close them. (Note: an EARLIER,
+unrelated "T106" was mentioned once in the Remediation Record below, as a
+stray/incorrect reference in a task that no longer exists at that number —
+that was fixed by pointing to the real T080 back on 2026-09-10. The T106
+below is a new, real task, unrelated to that historical note.)
+
+- [x] **T104** — FR-202 conditional workflow branching
+  **Req**: FR-202 **Scn**: — **ADR**: ADR-0005 **Path**: `src/orchestration/branching.py`
+  **Prereq**: T056 (eligibility query), T063 (lineage) **Dep**: T056 **P**: no
+  **Artifact**: `set_stage_outcome`, `add_conditional_branch`, `evaluate_branch_conditions`
+  **TDD**: test-first — true/false/malformed/missing-condition cases, plus restart/resume non-reversal
+  **Validation**: `uv run pytest tests/orchestration/test_conditional_branching.py` — 6 passed
+  **Docs**: docs/final-engineering-summary.md §6, §19 (updated) **Trace**: FR-202, this fixes the one previously-disclosed gap in an otherwise-real sequential/parallel/sync implementation (T056–T058)
+  **Risk**: a condition is evaluated against the PARENT stage's persisted outcome only — never live external state — so evaluation is deterministic and idempotent; only 'pending' branch stages are ever touched, which is what makes restart/resume safe by construction, not by a separate resume-specific code path
+  **Done**: all 6 tests pass, including the explicit restart/resume non-reversal test **Human**: no
+
+- [x] **T105** — Live policy evaluation in workflow execution
+  **Req**: FR-303, FR-304, FR-306 **Scn**: — **SC**: SC-006 **ADR**: — **Path**: `src/policy/live.py`
+  **Prereq**: T051 (evaluator), T053 (exception) **Dep**: T051 **P**: no
+  **Artifact**: `run_mandatory_policy_checks`, `is_release_ready`; `policy_evaluation.artifact_revision` column added to schema
+  **TDD**: test-first — PASS/FAIL/EXCEPTION-REQUESTED/NOT-APPLICABLE + stale-revision invalidation
+  **Validation**: `uv run pytest tests/policy/test_live_policy_evaluation.py` — 13 passed
+  **Docs**: docs/final-engineering-summary.md §8 (updated); scripts/demo_greenfield.py updated to call `run_mandatory_policy_checks` instead of one manual check, so SC-006 is now demonstrated live, not just unit-tested **Trace**: FR-303, FR-304, FR-306, SC-006
+  **Risk**: the 3 automatic per-workflow checks are real, fast, local, and deterministic (lockfile mtime, decision-lineage inspection) — deliberately NOT re-running the slow, network-based `pip-audit` scan per workflow; that remains the separate T044 release-readiness-time check
+  **Done**: all 13 tests pass; `scripts/demo_greenfield.py` shows `is_release_ready: True` for a live workflow **Human**: no
+
+- [ ] **T106** — Automatic background workflow execution from the HTTP API
+  **Req**: FR-201–206 **Scn**: US2 **ADR**: ADR-0005 **Path**: `src/orchestration/live_scheduler.py`
+  **Prereq**: T104, T105, T058 (atomic claim), T059 (reaper) **Dep**: T104, T105 **P**: no
+  **Artifact**: an asyncio background tick loop started/stopped by `src/api/main.py`'s lifespan
+  **TDD**: test-first — HTTP-only integration test creating a workflow and observing real transitions with zero direct scheduler calls
+  **Validation**: `uv run pytest tests/e2e/test_live_workflow_execution.py tests/orchestration/test_live_scheduler.py`
+  **Docs**: docs/final-engineering-summary.md §6, §19 (updated) **Trace**: FR-201–206, this fixes the "no live HTTP-triggered execution" gap disclosed in the Final Engineering Summary
+  **Risk**: **external agent adapters remain fail-closed** — this loop's default stage executor performs only safe, built-in, in-process completion (no subprocess, no `claude` CLI invocation, no credential access); T048's real CLI wrapper and any future real adapter are deliberately NOT wired into this automatic loop while ADR-0006 remains Rejected, consistent with T100–T103 staying blocked
+  **Done**: see this task group's own commit for exact test counts and the HTTP-integration-test result **Human**: no
+
 ### Remediation Record (`/speckit-analyze` rerun, 2026-09-10)
 
 This document was revised once, after an initial `/speckit-analyze` pass

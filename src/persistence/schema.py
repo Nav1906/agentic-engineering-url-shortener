@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS policy_evaluation (
     workflow_instance_id TEXT REFERENCES orchestration_workflow_instance(id),
     policy_id TEXT NOT NULL,
     policy_version TEXT NOT NULL,
+    artifact_revision TEXT,
     outcome TEXT NOT NULL CHECK (outcome IN ('PASS', 'FAIL', 'EXCEPTION-REQUESTED', 'NOT-APPLICABLE')),
     evaluated_at TEXT NOT NULL
 );
