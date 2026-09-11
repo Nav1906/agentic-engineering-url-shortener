@@ -90,7 +90,7 @@ Expected: `SCENARIO C (AMBIGUOUS) PASSED`. Note the script's own printed disclos
 [plan.md](../specs/001-governed-url-shortener/plan.md) §1–§12. Package layout: `src/{domain,orchestration,policy,api,persistence,observability}/`.
 
 ## 16. ADRs
-[docs/adr/](adr/) — 9 of 10 Accepted; `0006-human-approval-model.md` is Rejected (see its Revision 3/4 for the full spike history).
+[docs/adr/](adr/) — all 10 Accepted; `0006-human-approval-model.md` was accepted as a scope-limited Revision 5 (2026-09-11) after Revisions 3/4 were rejected/abandoned — see that file's own Status section for the full history.
 
 ## 17. Requirement traceability
 [traceability-matrix.md](traceability-matrix.md) — every FR mapped to task, code, test.

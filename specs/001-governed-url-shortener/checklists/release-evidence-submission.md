@@ -12,28 +12,28 @@ satisfied, not implementation verified. IDs continue from
 
 ## 17. GitHub Evidence
 
-- [ ] CHK102 Is a requirement specified that commit messages describe engineering intent (not just "wip" or "fix"), with this checked against the actual commit history to date? [Constitution Principle X]
-- [ ] CHK103 Is it specified that commits must reflect the actual execution sequence, with a prohibition on manufacturing commits to create the appearance of TDD after the fact? [Evidence-integrity, guide "Suggested Commit Progression"]
-- [ ] CHK104 [Gap] Is a requirement specified for how ADR-0006's Rejected status and the Option A spike's real (blocked) outcome remain visible in git history, rather than only in a document that could be overlooked? — **Self-check**: commit `a679708` records this; verify on each future commit that this remains true.
-- [ ] CHK105 Is it specified that no confidential material (the assignment guide) may ever appear in git history, with the current `.gitignore` rule verified against the actual tracked file list, not merely assumed correct? [Security]
+- [x] CHK102 Is a requirement specified that commit messages describe engineering intent (not just "wip" or "fix"), with this checked against the actual commit history to date? [Constitution Principle X]
+- [x] CHK103 Is it specified that commits must reflect the actual execution sequence, with a prohibition on manufacturing commits to create the appearance of TDD after the fact? [Evidence-integrity, guide "Suggested Commit Progression"]
+- [x] CHK104 [Gap] Is a requirement specified for how ADR-0006's Rejected status and the Option A spike's real (blocked) outcome remain visible in git history, rather than only in a document that could be overlooked? — **Self-check**: commit `a679708` records this; verify on each future commit that this remains true.
+- [x] CHK105 Is it specified that no confidential material (the assignment guide) may ever appear in git history, with the current `.gitignore` rule verified against the actual tracked file list, not merely assumed correct? [Security]
 - [ ] CHK106 [Gap] Is a final-tag requirement specified (e.g., `assessment-submission-v1.0`), to be applied only after a clean status and a validated fresh-clone run — per the guide's Section 28?
 
 ## 18. Release Readiness
 
-- [ ] CHK107 Is the release-readiness outcome set specified as exactly `READY` / `READY WITH ACCEPTED LIMITATIONS` / `NOT READY`, with no fourth, softer category available? [Clarity, spec.md User Story 4]
-- [ ] CHK108 Is it specified, without exception, that a missing mandatory scenario, security control, approval, policy outcome, or validation step blocks `READY` regardless of which delivery-sequence bucket it falls in — the specific rule corrected at this review after an earlier draft got it wrong? [Consistency, plan.md § Planning Constraints]
-- [ ] CHK109 Is the distinction between a legitimate "accepted limitation" (a genuinely non-mandatory item) and a disguised waiver of a mandatory requirement specified precisely, with examples of each? [Clarity, plan.md § Planning Constraints]
-- [ ] CHK110 Is ADR-0006's unresolved status specified as a named, disclosed accepted-limitation candidate — rather than something the readiness determination would need to silently work around? [Evidence-integrity, docs/governance/ Sequencing Decision]
-- [ ] CHK111 [Gap] Is a specific, minimum defensible release-readiness bar defined for *this* timebox (which of the mandatory items above absolutely must exist before any readiness claim is made)?
-- [ ] CHK112 Is it specified that a release-readiness determination must cite the exact repository artifacts and commands a reviewer can use to verify it, not only a narrative conclusion? [Evidence-integrity, Constitution Principle XI]
+- [x] CHK107 Is the release-readiness outcome set specified as exactly `READY` / `READY WITH ACCEPTED LIMITATIONS` / `NOT READY`, with no fourth, softer category available? [Clarity, spec.md User Story 4]
+- [x] CHK108 Is it specified, without exception, that a missing mandatory scenario, security control, approval, policy outcome, or validation step blocks `READY` regardless of which delivery-sequence bucket it falls in — the specific rule corrected at this review after an earlier draft got it wrong? [Consistency, plan.md § Planning Constraints]
+- [x] CHK109 Is the distinction between a legitimate "accepted limitation" (a genuinely non-mandatory item) and a disguised waiver of a mandatory requirement specified precisely, with examples of each? [Clarity, plan.md § Planning Constraints]
+- [x] CHK110 Is ADR-0006's unresolved status specified as a named, disclosed accepted-limitation candidate — rather than something the readiness determination would need to silently work around? [Evidence-integrity, docs/governance/ Sequencing Decision]
+- [x] CHK111 [Gap] Is a specific, minimum defensible release-readiness bar defined for *this* timebox (which of the mandatory items above absolutely must exist before any readiness claim is made)?
+- [x] CHK112 Is it specified that a release-readiness determination must cite the exact repository artifacts and commands a reviewer can use to verify it, not only a narrative conclusion? [Evidence-integrity, Constitution Principle XI]
 
 ## 19. Assessment Submission
 
-- [ ] CHK113 Is the mandatory 21-section Final Engineering Summary schema (per the guide, Section 25) specified as the target structure, so its eventual generation isn't improvised? [Completeness]
-- [ ] CHK114 Is a Reviewer Navigation Guide specified as a required deliverable distinct from the Final Engineering Summary, with its own defined purpose (quick verification paths, not a restatement)? [Clarity, guide Section 26]
+- [x] CHK113 Is the mandatory 21-section Final Engineering Summary schema (per the guide, Section 25) specified as the target structure, so its eventual generation isn't improvised? [Completeness]
+- [x] CHK114 Is a Reviewer Navigation Guide specified as a required deliverable distinct from the Final Engineering Summary, with its own defined purpose (quick verification paths, not a restatement)? [Clarity, guide Section 26]
 - [ ] CHK115 [Gap] Is it specified which claims in the eventual submission must be labeled "demonstration" versus presented as unqualified fact, consistent with the demonstration-data labeling rule already established for metrics (FR-604)?
-- [ ] CHK116 Is a final independent, adversarial review (the guide's "Principal Engineer Assessment") specified as a required step before submission, distinct from and in addition to this session's own iterative self-review? [Completeness, guide Section 23]
-- [ ] CHK117 [Gap] Is it specified how known, unresolved items at submission time (e.g., if ADR-0006 is still unresolved) will be disclosed in the submission itself, rather than only in an internal governance file a reviewer might not open?
+- [x] CHK116 Is a final independent, adversarial review (the guide's "Principal Engineer Assessment") specified as a required step before submission, distinct from and in addition to this session's own iterative self-review? [Completeness, guide Section 23]
+- [x] CHK117 [Gap] Is it specified how known, unresolved items at submission time (e.g., if ADR-0006 is still unresolved) will be disclosed in the submission itself, rather than only in an internal governance file a reviewer might not open?
 
 ## Notes
 

@@ -9,8 +9,8 @@ implemented)** explicitly, never left ambiguous.
 
 Full schemas: [contracts/openapi.yaml](./contracts/openapi.yaml). Full
 persisted-entity detail: [data-model.md](./data-model.md). Architecture
-rationale: [docs/adr/](../../docs/adr/) (9 of 10 Accepted; ADR-0006 remains
-Rejected — see below).
+rationale: [docs/adr/](../../docs/adr/) (all 10 Accepted; ADR-0006 as a
+scope-limited Revision 5 — see "Human approval" below).
 
 ## Prerequisites
 
@@ -26,11 +26,11 @@ uv sync                                   # installs pinned dependencies (ADR-00
 uv run uvicorn src.api.main:app --reload  # starts the app on http://localhost:8000
 ```
 
-`uv run scripts/bootstrap_credentials.py` from the original plan is **not
-run here** — that script, and `scripts/approve.py`, remain explicitly
-**BLOCKED** (tasks.md T100/T101) pending an accepted replacement for
-ADR-0006's still-Rejected credential-isolation mechanism. See "Human
-approval" below for what is and isn't currently possible as a result.
+`scripts/bootstrap_credentials.py` and `scripts/approve.py` are real and
+runnable — see "Human approval" below. They were blocked earlier in this
+project's history pending Human Gate 4's ADR-0006 decision; that decision
+(Revision 5, scope-limited) was made 2026-09-11 and T100/T101 implemented
+against it.
 
 ## Run the test suite
 
