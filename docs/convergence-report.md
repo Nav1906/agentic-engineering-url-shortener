@@ -116,11 +116,18 @@ disclosed ([threat-model.md](threat-model.md),
 [security-summary.md](security-summary.md),
 [risk-register.md](risk-register.md)) and were never mandatory FRs.
 
-This decision is the **implementer's own evidence-based determination**,
-consistent with the guide's Prompt 9 rule against returning `READY` while
-anything mandatory remains incomplete. It has **not yet** been through the
-guide's Section 23 Final Independent Assessment — that is the next step in
-this same pass, using a fresh reviewer with no implementation-session
-context. This decision may be revised (tightened, not loosened) if that
-independent review surfaces a mandatory blocking gap this self-review
-missed.
+**Confirmed final, post-independent-assessment.** This decision has now
+been through the guide's Section 23 Final Independent Assessment
+([final-independent-assessment.md](final-independent-assessment.md)),
+run by a fresh reviewer agent with no implementation-session context.
+Verdict: **BORDERLINE, no mandatory blocking gaps** (the assessment's own
+explicit finding). The one confirmed real defect it surfaced (a
+`policy_evaluation` duplicate-row race under concurrent scheduler ticks)
+has been fixed and regression-tested; the remaining findings were
+documentation staleness (fixed) or disclosed, non-mandatory limitations
+(logged as backlog, not fixed, per instruction not to reopen accepted
+architecture for subjective improvement). The release-readiness decision
+is therefore **unchanged and confirmed**: `READY WITH ACCEPTED
+LIMITATIONS` — not tightened, because no mandatory gap was found, and not
+loosened, because the accepted limitations remain exactly as disclosed
+before this review.
