@@ -110,22 +110,35 @@ under concurrency, reaper, reconciliation, retry-safety, backoff timing,
 subprocess timeouts, fallback, rollback/compensation, safe-stop + resume,
 replanning cascade, worktree invalidation).
 
-## Human approval -- fail-closed by design (ADR-0006 unresolved)
+## Human approval -- real, end-to-end (ADR-0006 Revision 5, 2026-09-11)
 
 ```bash
+uv run python3 scripts/bootstrap_credentials.py
+# Real: prints two role-specific tokens (alice/reviewer_approver,
+# bob/release_owner) exactly once. Write them down -- there is no
+# read-back command.
+
+uv run python3 scripts/approve.py --identity alice --workflow <workflow_id> \
+  --gate requirements_approval --decision approve --rationale "looks complete"
+# Real: 200, an ApprovalDecision JSON body (identity: "alice",
+# role: "reviewer_approver", decision: "approved").
+
 curl -s -X POST http://localhost:8000/workflows/<workflow_id>/gates/requirements_approval/approve \
   -H "Authorization: Bearer whatever-token"
-# Real: 401 unauthenticated -- ALWAYS, in a genuine deployment of this code,
-# because no credential-provisioning path is wired (T100/T101 remain
-# BLOCKED). This is deliberate fail-closed behavior, not a bug -- see
-# src/api/auth.py's module docstring and tasks.md T066.
+# Real: still 401 for any token that wasn't actually provisioned --
+# fail-closed remains the default for anything other than a real,
+# bootstrapped token (src/api/auth.py::resolve_identity).
 ```
 
-The role/revision-binding logic itself (which role a gate requires, FR-313's
-wrong-gate rejection, FR-310's required fields) is real and tested via
-`tests/contract/test_approvals.py`, using a TEST-ONLY credential-registration
-helper never reachable from application code -- see that file's own
-docstring for why this doesn't contradict the fail-closed claim above.
+**Scope of this decision, stated plainly (docs/threat-model.md)**: this
+prototype permanently excludes external-agent subprocess execution from
+its trusted boundary (`src/orchestration/adapters/launcher.py` always
+fails closed, T102) -- that is what makes a real credential-provisioning
+path safe. This does **not** claim same-user macOS credential isolation is
+solved: anything else running as the same OS user as this prototype can
+still read `local-secrets/approval_tokens.raw.json` directly. Do not
+represent this as sandboxing or as protection against operator-account
+compromise -- see `docs/threat-model.md` for the exact, disclosed boundary.
 
 ## Retry / safe-stop demonstration (FR-401–FR-406)
 
@@ -171,24 +184,24 @@ curl -s http://localhost:8000/metrics/reliability
 # reported separately, never folded into mttr_seconds.
 ```
 
-## Not yet implemented (disclosed, not silently dropped)
+## Not yet implemented / explicitly out of scope
 
-- `scripts/bootstrap_credentials.py`, `scripts/approve.py`, `local-secrets/`
-  setup, and a final agent-isolation launcher -- all explicitly BLOCKED
-  (tasks.md T100–T103) pending an accepted ADR-0006 replacement.
-- Executable postcondition validators with retained artifact-hash evidence
-  (T062) and isolated per-execution `git worktree`s with controller-only
-  promotion (T061) -- the DAG/reconciliation/replanning mechanics that
-  don't depend on these are real and tested; these two specific ADR-0005
-  refinements are not yet built.
-- A stage-execution HTTP trigger wiring the orchestration engine's DAG
-  mechanics to actually run against a submitted requirement end-to-end via
-  the API (currently exercised directly via `src/orchestration/` in tests
-  and the three scenario scripts, not yet via a single HTTP call).
-- The broader test-suite sweep groups (T087, T088, T090 as literal 1:1 full
-  "sweep" tasks distinct from the many real tests already in
-  `tests/unit/contract/orchestration/...`), the Final Engineering Summary,
-  Reviewer Navigation Guide, and Traceability Matrix documents (T097–T099).
+As of 2026-09-11, all 103 tasks in `tasks.md` are complete (T100–T103
+unblocked and implemented under ADR-0006 Revision 5; T104–T106 closed the
+remaining engineering gaps). What remains is genuinely, permanently out of
+scope for this release, not merely undone:
+
+- **External-agent subprocess execution** (Claude Code or any other agent)
+  -- permanently excluded by Human Gate 4 decision (ADR-0006 Revision 5),
+  not a temporary gap. `src/orchestration/adapters/launcher.py` always
+  fails closed; see `docs/threat-model.md`.
+- **Same-OS-user credential isolation** -- explicitly not solved and not
+  claimed to be; see `docs/threat-model.md`.
+
+See `docs/final-engineering-summary.md` §19 for the full, current
+disposition, including the small set of legitimately-deferred,
+never-mandatory items (egress restriction, DNS-rebinding protection,
+tamper-evident audit log, containerized deployment).
 
 ## Reset
 

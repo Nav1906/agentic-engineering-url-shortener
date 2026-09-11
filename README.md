@@ -11,27 +11,31 @@ the primary object of evaluation. See
 - **Run it**: [specs/001-governed-url-shortener/quickstart.md](specs/001-governed-url-shortener/quickstart.md) —
   real, executed commands only.
 - **Requirements**: [specs/001-governed-url-shortener/spec.md](specs/001-governed-url-shortener/spec.md) (Approved)
-- **Plan and architecture**: [specs/001-governed-url-shortener/plan.md](specs/001-governed-url-shortener/plan.md) (9/10 ADRs Accepted)
+- **Plan and architecture**: [specs/001-governed-url-shortener/plan.md](specs/001-governed-url-shortener/plan.md) (all 10 ADRs Accepted)
 - **Architecture Decision Records**: [docs/adr/](docs/adr/)
-- **Task plan**: [specs/001-governed-url-shortener/tasks.md](specs/001-governed-url-shortener/tasks.md) (103 tasks, 42 groups)
+- **Task plan**: [specs/001-governed-url-shortener/tasks.md](specs/001-governed-url-shortener/tasks.md) (103/103 tasks complete)
+- **Threat model**: [docs/threat-model.md](docs/threat-model.md)
 - **Governance history**: [docs/governance/](docs/governance/)
+- **Final Engineering Summary**: [docs/final-engineering-summary.md](docs/final-engineering-summary.md)
 
-## The one open item
+## The one thing to read before trusting the approval mechanism
 
-ADR-0006 (credential-isolation for the human-approval surface) remains
-**Rejected** — its macOS `sandbox-exec` mechanism failed a direct
-feasibility spike; a replacement (a separate OS user) was designed but
-never executed (no privileged command has been run). As a direct
-consequence, the approval-gate endpoints are **fail-closed**: they exist,
-are role/revision-checked, and are tested, but no real approval can
-currently succeed against this codebase, by design, until you accept a
-replacement mechanism. See `src/api/auth.py`'s module docstring and
-`tasks.md` T100–T103 for the full, disclosed detail.
+ADR-0006 was accepted 2026-09-11 as **Revision 5, scope-limited**: this
+prototype permanently excludes external-agent subprocess execution from
+its trusted boundary, and that is what makes its real human-approval
+credential mechanism (`scripts/bootstrap_credentials.py`,
+`scripts/approve.py`) safe to run. **This does not claim same-user macOS
+credential isolation is solved, and does not claim sandboxing.** See
+[docs/threat-model.md](docs/threat-model.md) for exactly what is and isn't
+defended against — read it before assuming more than it says.
 
 ## Quick facts
 
 - Python 3.12, FastAPI, SQLite (WAL mode), no external services, no Docker.
-- `uv run pytest tests/` — 159 real tests, all passing as of the last
+- `uv run pytest tests/` — 237 real tests, all passing as of the last
   commit on this branch.
 - Three required scenarios (greenfield/brownfield/ambiguous) each run as a
   standalone script against real code: `scripts/demo_*.py`.
+- A workflow created via `POST /workflows` with `{"auto_execute": true}`
+  progresses to completion automatically, driven by a real in-process
+  background scheduler — no direct scheduler calls required.

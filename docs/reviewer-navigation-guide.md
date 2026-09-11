@@ -36,7 +36,13 @@ curl -s http://localhost:8000/workflows/<id>
 Expected: stages, `depends_on` edges, `decision_lineage`. Related: FR-204, FR-206. Also `GET /workflows/<id>/audit-events`, `GET /workflows/<id>/policy-evaluations`.
 
 ## 7. How to perform a human approval
-`tests/contract/test_approvals.py` — real role/revision-binding logic, tested via a TEST-ONLY credential-registration helper (`src/api/auth.py::register_test_credential`, never called by application code). **A real approval cannot currently be performed against a live deployment** — the endpoint is fail-closed because ADR-0006 remains Rejected and T100/T101 (credential provisioning) are BLOCKED. See `src/api/auth.py`'s module docstring. Related: FR-301–313.
+```bash
+uv run python3 scripts/bootstrap_credentials.py   # once: prints alice/bob tokens, write them down
+uv run uvicorn src.api.main:app &
+uv run python3 scripts/approve.py --identity alice --workflow <id> \
+  --gate requirements_approval --decision approve --rationale "looks complete"
+```
+Expected: `200`, an `ApprovalDecision` JSON body with `identity: "alice"`, `role: "reviewer_approver"`. Real, end-to-end, as of ADR-0006 Revision 5 (2026-09-11) — not a test-only simulation. `tests/security/test_t103_security_verification.py` proves both roles work via this exact pipeline. Related: FR-301–313, `docs/adr/0006-human-approval-model.md` Revision 5, `docs/threat-model.md`.
 
 ## 8. How to demonstrate retry
 ```bash
@@ -99,10 +105,10 @@ curl -s http://localhost:8000/metrics/reliability
 Always `demonstration_data: true`. `mttr_seconds` is `null` until a recovered-failure event exists in this deployment's own audit trail — by design, not a bug. Related: FR-603, FR-604, ADR-0008.
 
 ## 20. Security controls
-[final-engineering-summary.md](final-engineering-summary.md) §10. Code: `src/domain/validation.py` (scheme/private-address), `src/domain/idempotency.py` (key-length floor), `src/api/middleware/rate_limit.py`. Scan evidence: `pip-audit` → no known vulnerabilities (run 2026-09-10).
+[final-engineering-summary.md](final-engineering-summary.md) §10. Code: `src/domain/validation.py` (scheme/private-address), `src/domain/idempotency.py` (key-length floor), `src/api/middleware/rate_limit.py`, `src/orchestration/adapters/launcher.py` (external-agent shutdown, ADR-0006 Rev. 5), `src/api/credentials.py` (real credential provisioning). Scan evidence: `pip-audit` → no known vulnerabilities. Threat model: [threat-model.md](threat-model.md).
 
 ## 21. Known limitations
-[final-engineering-summary.md](final-engineering-summary.md) §19 — split explicitly into governance-blocked (T100–T103) vs. genuinely incomplete (FR-202 conditional branching, live policy wiring, live DAG-execution trigger) vs. deferred-and-legitimately-acceptable (egress restriction, DNS-rebinding protection, tamper-evident audit log, containerization).
+[final-engineering-summary.md](final-engineering-summary.md) §19 — genuinely incomplete items (FR-202 conditional branching, live policy wiring, live DAG-execution trigger) and formerly-governance-blocked items (T100–T103) are both now closed (2026-09-11). What remains, explicitly disclosed and permanent for this release: same-OS-user compromise, operator-account compromise, and any future reintroduction of external-agent execution ([threat-model.md](threat-model.md)) — plus the pre-existing, legitimately-deferred, never-mandatory items (egress restriction, DNS-rebinding protection, tamper-evident audit log, containerization).
 
 ## 22. Final engineering summary
 [final-engineering-summary.md](final-engineering-summary.md) — the full 21-section account.

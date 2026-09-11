@@ -1,25 +1,30 @@
-"""Verified-credential identity derivation — FAIL-CLOSED (T066, T067;
+"""Verified-credential identity derivation (T066, T067, T100/T101;
 FR-308, FR-309).
 
-ADR-0006's credential-isolation mechanism remains Rejected. T100
-(scripts/bootstrap_credentials.py) and T101 (scripts/approve.py) are
-explicitly BLOCKED pending an accepted replacement. Consequently there is
-NO production credential-provisioning path wired into this build: the
-credential store below is empty by default and stays empty in any real
-deployment of this code, because nothing populates it. This is deliberate,
-not an oversight — every approval attempt against a real deployment is
-therefore rejected, which is the fail-closed behavior your instruction
-requires, not a simulation of it.
+Human Gate 4, 2026-09-11: ADR-0006 Revision 5 was adopted — a
+scope-limited replacement that permanently excludes external-agent
+subprocess execution from this prototype's trusted boundary (see
+src/orchestration/adapters/launcher.py). That is what makes real
+credential provisioning (T100, src/api/credentials.py) safe to wire in
+here: there is no agent process for a same-OS-user credential-isolation
+gap to matter to. This does NOT claim same-user macOS credential
+isolation is solved — see docs/threat-model.md.
 
-`register_test_credential` exists ONLY for tests exercising the
-role/revision-binding logic (T065) in isolation from the still-unresolved
-credential question; it is never called by any application code path, only
-by test fixtures.
+`resolve_identity` checks two sources, in order: the TEST-ONLY in-memory
+store (register_test_credential, for unit/contract tests that want an
+isolated fake identity without touching the filesystem), then the real
+file-backed store (src/api/credentials.py, populated by
+scripts/bootstrap_credentials.py). A real deployment where bootstrap was
+never run has an empty file-backed store too, so this remains fail-closed
+by default — the difference from before is that there is now a real,
+intentional path out of that default, not merely an empty placeholder.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
+
+from src.api import credentials
 
 Role = Literal["reviewer_approver", "release_owner"]
 
@@ -31,9 +36,7 @@ class Identity:
     is_agent: bool = False
 
 
-# Empty by default. Real deployment: stays empty forever until T100/T101 are
-# unblocked by an accepted ADR-0006 replacement — this IS the fail-closed
-# posture, not a placeholder for one.
+# TEST-ONLY in-memory store, checked before the real file-backed one.
 _CREDENTIAL_STORE: dict[str, Identity] = {}
 
 
@@ -54,7 +57,14 @@ def resolve_identity(bearer_token: str | None) -> Identity | None:
     fallback that grants access."""
     if not bearer_token:
         return None
-    return _CREDENTIAL_STORE.get(bearer_token)
+    test_identity = _CREDENTIAL_STORE.get(bearer_token)
+    if test_identity is not None:
+        return test_identity
+    verified = credentials.verify_token(bearer_token)
+    if verified is None:
+        return None
+    identity, role = verified
+    return Identity(identity=identity, role=role, is_agent=False)
 
 
 def reject_if_agent(identity: Identity) -> None:

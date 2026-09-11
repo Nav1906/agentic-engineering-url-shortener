@@ -4,12 +4,17 @@
 
 **Input**: Feature specification from `specs/001-governed-url-shortener/spec.md`
 
-**Status**: **9 of 10 ADRs ACCEPTED** by the human candidate at Human Gate
-4, 2026-09-10 ("accept all," applied to every ADR then presented for
-decision — ADR-0006 excluded, ruled on separately, remains **Rejected**).
-This plan itself, and ADRs 0005/0007/0009, went through three revision
-rounds before acceptance; ADR-0006 went through a fourth (rejected) and is
-tracked separately, still open.
+**Status**: **All 10 ADRs ACCEPTED.** 9 of 10 were accepted by the human
+candidate at Human Gate 4, 2026-09-10 ("accept all," applied to every ADR
+then presented for decision — ADR-0006 excluded at that time, ruled on
+separately). **ADR-0006 Revision 5 was accepted 2026-09-11** as a
+scope-limited replacement (excludes external-agent subprocess execution
+from this prototype's trusted boundary entirely; does not claim same-user
+macOS credential isolation is solved — see
+`docs/adr/0006-human-approval-model.md` Revision 5 and
+`docs/threat-model.md`). This plan itself, and ADRs 0005/0007/0009, went
+through three revision rounds before acceptance; ADR-0006 went through a
+fourth (rejected) and a fifth (accepted, scope-limited).
 Round 1 found a genuine crash/retry conflict, an unenforced credential-
 isolation claim, an under-specified execution model, SQLite contention
 coupling in the analytics design, an overstated contract-validation claim,
@@ -107,7 +112,7 @@ CLARIFICATION`. See research.md for the comparative analysis behind each.*
 |---|---|---|
 | I. Specification Before Implementation | No code written this stage; every plan decision traces to an approved FR | **PASS** |
 | II. Explicit Agentic Orchestration | ADR-0005 — persisted dependency graph, not implicit chaining | **PASS** (design-time; implementation-time re-verification required) |
-| III. Human Governance | ADR-0006 — role-checked approvals, revision-bound (ADR-0005), mechanism sound. Credential-isolation sub-control: **Revision 3 REJECTED by explicit Human Gate 4 decision** — its OS-sandbox mechanism spike-FAILED on the tested platform; a final Option A (separate OS user) spike is designed, awaiting authorization, not yet executed | **PASS** (role/revision mechanism) / **FAILED → PENDING RE-SPIKE** (credential isolation) |
+| III. Human Governance | ADR-0006 Revision 5 (accepted 2026-09-11, scope-limited) — role-checked approvals, revision-bound (ADR-0005), real credential provisioning (T100), a real human-approval CLI (T101), external-agent execution permanently excluded and fail-closed (T102), comprehensively tested (T103, 32 tests) | **PASS** — implemented and tested, not merely design-level; see `docs/adr/0006-human-approval-model.md` Revision 5 and `docs/threat-model.md` for the exact, disclosed boundary (same-OS-user compromise remains explicitly out of scope) |
 | IV. Test-Driven Engineering | ADR-0002 — pytest, TestClient enable red-green-refactor; plan §10 (Testing) below | **PASS** |
 | V. Security and Privacy by Design | plan §8 (Security) below — scheme allow-list, no PII in analytics (already resolved, AMB-002) | **PASS** |
 | VI. Compliance and Change-Control | research.md §8 — versioned policy manifest, PASS/FAIL/EXCEPTION-REQUESTED/NOT-APPLICABLE | **PASS** |
@@ -240,12 +245,17 @@ Mandatory gates (FR-301, unchanged from spec): unresolved ambiguity,
 architecture approval, security-sensitive action, destructive/irreversible
 action, constitutional exception, material risk acceptance, release
 readiness, final submission. Approval-recording mechanism (roles,
-revision-binding, audit fields): **ADR-0006**, sound and unaffected by the
-credential-isolation finding below. Credential-isolation mechanism
-specifically: **Revision 3 REJECTED (Human Gate 4, 2026-09-10)** — see
-ADR-0006 "Revision 4 — Option A Spike Design," awaiting authorization. Role
-mapping (FR-312/313): `reviewer_approver` — requirements/architecture;
-`release_owner` — release-readiness/final-submission.
+revision-binding, audit fields): **ADR-0006 Revision 5**, real and
+implemented — `scripts/bootstrap_credentials.py` (T100) provisions
+role-specific cryptographically random tokens; `scripts/approve.py` (T101)
+is the human-invoked CLI that submits a real decision using one;
+`src/orchestration/adapters/launcher.py` (T102) permanently excludes
+external-agent subprocess execution, the scope condition that makes real
+credential provisioning safe. Role mapping (FR-312/313): `reviewer_approver`
+— requirements/architecture; `release_owner` — release-readiness/
+final-submission. See `docs/threat-model.md` for exactly what this does
+and does not defend against (same-OS-user compromise is explicitly out of
+scope).
 
 **Approval-timeout policy (`PVT-006`, proposed, added at Human Gate 4
 review)**: a workflow awaiting approval escalates (FR-302 — never inferred
@@ -344,28 +354,26 @@ introduced, since there is only one process to trace within (ADR-0001).
   stated this plainly before, and is stated plainly now so it is not
   mistaken for an omission. The approval surface (`ADR-0006`) is the only
   authenticated part of this system.
-- **Secrets management**: approver credential hashes only in the app
-  process's environment (ADR-0006); raw credentials never in git (gitignored
-  local file).
+- **Secrets management (ADR-0006 Revision 5, accepted 2026-09-11)**: raw
+  approval tokens live only in a chmod-600, gitignored local file
+  (`local-secrets/approval_tokens.raw.json`), printed once at creation and
+  never again; the running application reads only salted SHA-256 hashes
+  from a separate, also-gitignored, chmod-600 file. Neither raw tokens nor
+  hashes are ever committed. See `docs/threat-model.md`.
 - **Dependency risk**: `uv`-pinned lockfile; a dependency-scan check is part
   of the compliance policy manifest (research.md §8).
 - **Audit integrity**: append-only convention (ADR-0008), disclosed as not
   cryptographically tamper-evident at this scale.
-- **Least privilege — Revision 3 REJECTED (Human Gate 4, 2026-09-10)**: the
-  broadened protected-asset boundary (database, policy manifest, launch
-  scripts, the orchestration engine's own source, main `.git/`) via an
-  OS-level default-deny sandbox remains the right *design shape*, but its
-  specified mechanism (macOS `sandbox-exec`) **failed a direct feasibility
-  spike** on the actual target platform (confirmed `SIGABRT` on any custom
-  profile allowing `process-exec`); Linux `bwrap` was never tested. This
-  control was **rejected as written**, not accepted with caveats. A final,
-  bounded spike for **Option A (a separate OS user)** is designed in
-  ADR-0006 "Revision 4" and awaiting your authorization — no privileged
-  command has been run. **Explicitly out of scope regardless of outcome**:
-  this says nothing about, and provides no protection for, the interactive
-  Claude Code session used to develop this repository. **This control
-  remains "not yet PASS"** — now for a confirmed-failure reason, not merely
-  an untested one.
+- **Least privilege — resolved by scope, not by sandboxing (ADR-0006
+  Revision 5, accepted 2026-09-11)**: Revision 3's OS-sandbox mechanism
+  (macOS `sandbox-exec`) remains a confirmed platform failure (`SIGABRT` on
+  any custom profile allowing `process-exec`) and is **not** fixed by
+  Revision 5 — Revision 5 makes that failure moot for this release by
+  removing external-agent subprocess execution from the trusted boundary
+  entirely (`src/orchestration/adapters/launcher.py` always fails closed,
+  T102, structurally verified). This is a narrower claim than sandboxing:
+  it does not defend against same-OS-user compromise, and does not claim
+  to. See `docs/threat-model.md` for the exact, disclosed boundary.
 - **Secure defaults**: no default expiration is *not* a security weakening —
   it was an explicit, approved behavioral decision (AMB-006), not a default
   chosen for convenience.
@@ -439,16 +447,17 @@ and Validation:
 | 0003 | SQLite, WAL mode, single file | **Accepted** |
 | 0004 | Random base62 short codes, bounded retry-on-collision | **Accepted** |
 | **0005 (Rev. 3)** | Hand-rolled persisted dependency-graph engine, corrected lifecycle order (architecture approval before tasks), real `claude` CLI invocation (not a fictitious standalone command), reconciliation on exception/timeout/stale-lease alike, isolated per-execution `git worktree`s with controller-only promotion, a periodic (not just event-triggered) reaper, and executable postcondition validators with retained artifact-hash evidence | **Accepted** |
-| **0006 (Rev. 3 — REJECTED, 2026-09-10)** | Rejected as written: primary macOS sandbox mechanism spike-FAILED on the actual target platform; Linux untested. A final, bounded Option A spike (separate OS user) is designed and awaiting your authorization to execute any privileged command — see ADR-0006 "Revision 4 — Option A Spike Design" | **Rejected** — the sole remaining unaccepted ADR |
+| **0006 (Rev. 5 — ACCEPTED, 2026-09-11)** | Scope-limited: external-agent subprocess execution permanently excluded from this prototype's trusted boundary (`src/orchestration/adapters/launcher.py` always fails closed, structurally verified) — this is what makes real credential provisioning (T100), a real human-approval CLI (T101), and comprehensive verification (T103, 32 tests) safe to implement, since there is no longer an agent process for same-OS-user credential isolation to matter to. Does **not** claim same-user macOS credential isolation is solved — see `docs/threat-model.md`. Revisions 3/4's sandbox-mechanism failure remains unresolved, not fixed; it is simply no longer this release's problem to solve | **Accepted** |
 | **0007 (Rev. 3)** | Bounded retry — 3 attempts, exactly 2 waits (1s, 2s, corrected from a miscounted 1s/2s/4s) — no longer treats an in-band exception as automatically safe without reconciliation; realistic per-subprocess timeouts (5s internal / 300s pytest / 600s Claude); SQLite correctly described as serializing writes, not providing concurrent row-level writers | **Accepted** |
 | 0008 | Append-only audit table + precise MTTR definition (no number proposed yet) | **Accepted** |
 | **0009 (Rev. 3)** | Analytics durability write moved to **after** the response is sent (closing an overcount defect), back onto plain SQLite (the separate WAL file and its unworkable hard-timeout claim are withdrawn); restart uncertainty handled via a single-store unclean-shutdown detector and a sticky, system-wide degradation signal — contract approved as spec.md FR-117 | **Accepted** |
 | 0010 | Plain local process via `uv run`, no Docker | **Accepted** |
 
-**9 of 10 ADRs Accepted by the human candidate at Human Gate 4, 2026-09-10**
-("accept all," applied to every ADR presented for decision at that point —
-**not** including ADR-0006, which was ruled on separately and earlier, and
-stays Rejected). **Numeric targets — provisionally approved as
+**All 10 ADRs Accepted.** 9 of 10 by the human candidate at Human Gate 4,
+2026-09-10 ("accept all," applied to every ADR presented for decision at
+that point — not including ADR-0006, which was ruled on separately and
+earlier). **ADR-0006 Revision 5 accepted 2026-09-11**, scope-limited (see
+above and `docs/adr/0006-human-approval-model.md`). **Numeric targets — provisionally approved as
 implementation targets (Human Gate 4, 2026-09-10), all labeled unverified
 until implementation tests pass**: `PVT-001` (50ms bounded-overhead
 budget for the post-response analytics write, per FR-106 — **corrected: not
@@ -635,10 +644,15 @@ eleven principles remain **PASS**. No Complexity Tracking entry is added.
 
 ## Human Gate 4
 
-**9 of 10 ADRs Accepted by explicit human-candidate decision, 2026-09-10**
-("accept all," per the guide's ADR gate and Constitution `Development
-Workflow and Human Gates` — none were marked Accepted except by that
-explicit decision). **ADR-0006 remains Rejected**, ruled on separately and
-earlier in the same review; its replacement (Option A) is designed, not
-executed, and not yet decided. Full inventory, rationale, and history:
-`docs/governance/gate-4-review-2026-09-10.md`.
+**All 10 ADRs now Accepted.** 9 of 10 by explicit human-candidate decision,
+2026-09-10 ("accept all," per the guide's ADR gate and Constitution
+`Development Workflow and Human Gates` — none were marked Accepted except
+by that explicit decision). **ADR-0006 was ruled on separately**: Revision
+3 Rejected (2026-09-10, sandbox mechanism spike-FAILED); **Revision 5
+Accepted 2026-09-11** as a scope-limited replacement excluding
+external-agent subprocess execution from this prototype's trusted boundary
+entirely — implemented and verified (T100–T103, 32 tests), not merely
+designed. Full inventory, rationale, and history:
+`docs/governance/gate-4-review-2026-09-10.md` (original 9-ADR decision)
+and `docs/adr/0006-human-approval-model.md` (the ADR-0006-specific
+decision history, Revisions 1–5).

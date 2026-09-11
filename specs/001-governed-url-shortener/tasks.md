@@ -33,9 +33,12 @@ same meaning as the guide's "parallelization status" field.
 `- [x] **Txxx**` = this task's own Done criterion has genuinely passed, with
 real retained evidence (a command, its output, and — where applicable — a
 commit) cited in that task's own entry or in
-`docs/final-engineering-summary.md`. `- [ ] **Txxx**` = not done; currently
-only T100–T103 (governance-blocked per explicit instruction, never
-attempted). No task is marked `[x]` on the strength of a written plan alone.
+`docs/final-engineering-summary.md`. **All 103 tasks are now `[x]`** —
+T100–T103 (originally governance-blocked) were unblocked and implemented
+2026-09-11 under ADR-0006 Revision 5 (scope-limited, external-agent
+execution permanently excluded — see the "Unblocked 2026-09-11" note
+before those four tasks below). No task is marked `[x]` on the strength of
+a written plan alone.
 
 ---
 
@@ -811,57 +814,66 @@ Group 14 may proceed regardless, since it does not depend on T052 passing.
   **Artifact**: timeout handling **TDD**: test-first — timeout never treated as approval **Validation**: `uv run pytest tests/orchestration/test_approval_timeout.py`
   **Docs**: plan.md §5 **Trace**: `PVT-006`, provisionally approved, unverified until this test passes **Risk**: none beyond the provisional-number caveat **Done**: escalation state distinct from approved/rejected **Human**: no
 
-### Blocked — pending an accepted replacement for ADR-0006
+### Unblocked 2026-09-11 — ADR-0006 Revision 5 (scope-limited) Accepted
 
-**Added during `/speckit-analyze` remediation (2026-09-10, finding F2)**: the
-four tasks below are the concrete implementation of ADR-0006's still-Rejected
-credential-isolation mechanism and plan.md's Project Structure entries for
-it. They are listed here — not deleted, not silently dropped from plan.md —
-but explicitly **BLOCKED**: none may be started under any bounded
-autonomous task-group execution until you accept a replacement mechanism for
-ADR-0006 (Option A's separate-OS-user execution, or an alternative). T066
-remains the only implementable piece of this area, and only in its
-documented fail-closed interim posture (token-based verified-identity
-derivation, explicitly not claiming OS-level isolation). **No runtime agent
-subprocess may launch without an accepted and verified isolation boundary.**
+**Human Gate 4 decision, 2026-09-11**: adopted a scope-limited ADR-0006
+Revision 5 — this prototype permanently excludes external-agent subprocess
+execution from its trusted boundary; external-agent execution stays
+fail-closed; the orchestration demonstration uses controlled built-in
+adapters only. This does **not** claim same-user macOS credential
+isolation is solved (see `docs/threat-model.md`) — it removes that
+unresolved question from this release's scope by removing its premise.
+T100–T103 below were BLOCKED (see the superseded note immediately below,
+retained for the record) and are now implemented and verified under this
+decision. T102's scope was redefined by the same decision from "local-
+secrets/ directory setup" to "enforced external-agent shutdown" — the
+local-secrets/ setup itself is now folded into T100, where the real
+credential-provisioning mechanism actually creates that directory.
 
-- [ ] **T100** — [BLOCKED] `scripts/bootstrap_credentials.py` (approver credential provisioning)
-  **Req**: FR-308 **Scn**: — **ADR**: ADR-0006 **Path**: `scripts/bootstrap_credentials.py`
-  **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
-  **Artifact**: none yet — blocked **TDD**: n/a — blocked
-  **Validation**: n/a — no command to run until unblocked
-  **Docs**: plan.md Project Structure (already lists this planned file, kept — not deleted, per your explicit instruction); ADR-0006 "Revision 4 — Option A Spike Design" (designed, not executed) **Trace**: ADR-0006 (Rejected), FR-308
-  **Risk**: **BLOCKED — do not implement.** ADR-0006's credential-isolation mechanism remains Rejected (macOS `sandbox-exec` spike-FAILED; Option A spike designed but never executed, no privileged command run). Building this script now would create a real code path that provisions approver credentials with no accepted isolation boundary protecting them — exactly the risk ADR-0006 exists to prevent.
-  **Done**: N/A while blocked — completion criteria to be defined alongside the accepted replacement mechanism **Human**: yes — blocked pending your ADR-0006 replacement decision; must not be started by an agent under any autonomous-execution authorization
+*(Superseded note, retained for the record — originally written 2026-09-10
+during `/speckit-analyze` remediation, finding F2): "the four tasks below
+are the concrete implementation of ADR-0006's still-Rejected credential-
+isolation mechanism... explicitly BLOCKED: none may be started... until
+you accept a replacement mechanism for ADR-0006." That replacement was
+accepted 2026-09-11 — see above.*
 
-- [ ] **T101** — [BLOCKED] `scripts/approve.py` (the sole code path that reads raw approver credentials)
-  **Req**: FR-308, FR-309 **Scn**: — **ADR**: ADR-0006 **Path**: `scripts/approve.py`
-  **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
-  **Artifact**: none yet — blocked **TDD**: n/a — blocked
-  **Validation**: n/a — no command to run until unblocked
-  **Docs**: plan.md Project Structure (already lists this planned file, kept — not deleted) **Trace**: ADR-0006 (Rejected), FR-308, FR-309
-  **Risk**: **BLOCKED — do not implement.** Same posture as T100, and higher-stakes: plan.md names this specifically as "the only code path that reads raw approver credentials." Building it without an accepted isolation boundary is the single highest-risk file this project could produce; must not be attempted under any bounded autonomous task-group execution.
-  **Done**: N/A while blocked **Human**: yes — blocked pending your ADR-0006 replacement decision; must not be started by an agent under any autonomous-execution authorization
+- [x] **T100** — Credential provisioning
+  **Req**: FR-308 **Scn**: — **ADR**: ADR-0006 Rev. 5 **Path**: `src/api/credentials.py`, `scripts/bootstrap_credentials.py`
+  **Prereq**: ADR-0006 Revision 5 accepted (2026-09-11) **Dep**: T066 **P**: no
+  **Artifact**: role-specific cryptographically random tokens (`secrets.token_urlsafe(32)`, 256 bits); salted SHA-256 hashes in `local-secrets/approval_tokens.hashed.json` (chmod 600, gitignored); raw tokens in `local-secrets/approval_tokens.raw.json` (chmod 600, gitignored), printed once at creation, never again
+  **TDD**: test-first **Validation**: `uv run pytest tests/security/test_credential_provisioning.py` — 11 passed
+  **Docs**: ADR-0006 Revision 5, `docs/threat-model.md` (same-OS-user compromise explicitly out of scope) **Trace**: FR-308, ADR-0006 Rev. 5
+  **Risk**: same-OS-user compromise is NOT defended against — disclosed in `docs/threat-model.md`, not silently assumed away. `bootstrap()` refuses to overwrite existing credentials without `force=True` (verified by test), since that would silently invalidate every token already handed to an operator.
+  **Done**: 11/11 tests pass, including chmod-600 verification on both files, high-entropy/no-collision tokens, hash file never containing a raw token, fail-closed-before-bootstrap, and force-overwrite invalidating old tokens **Human**: no (implemented under your Human Gate 4 authorization)
 
-- [ ] **T102** — [BLOCKED] `local-secrets/` directory setup and file permissions
-  **Req**: — **Scn**: — **ADR**: ADR-0006 **Path**: `local-secrets/`
-  **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
-  **Artifact**: none yet — blocked **TDD**: n/a — blocked
-  **Validation**: n/a — no command to run until unblocked
-  **Docs**: plan.md Project Structure (already lists this planned directory, kept — not deleted) **Trace**: ADR-0006 (Rejected)
-  **Risk**: **BLOCKED — do not implement.** Even setting file/directory permission bits here would be meaningless (and could create a false sense of security) without the OS-level isolation boundary ADR-0006 was supposed to provide around whatever this directory holds.
-  **Done**: N/A while blocked **Human**: yes — blocked pending your ADR-0006 replacement decision; must not be started by an agent under any autonomous-execution authorization
+- [x] **T101** — Human approval CLI
+  **Req**: FR-308, FR-309, FR-310 **Scn**: — **ADR**: ADR-0006 Rev. 5 **Path**: `scripts/approve.py`
+  **Prereq**: T100 **Dep**: T100 **P**: no
+  **Artifact**: a separate, human-invoked CLI reading the raw token locally (`credentials.read_raw_token`) and submitting it as a Bearer token to the real approval endpoint; never sends a client-asserted identity
+  **TDD**: test-first (via the real HTTP pipeline in T103's suite, not a mocked CLI test) **Validation**: `uv run pytest tests/security/test_t103_security_verification.py::test_valid_reviewer_approval_via_real_credentials tests/security/test_t103_security_verification.py::test_valid_release_owner_approval_via_real_credentials`
+  **Docs**: ADR-0006 Revision 5 **Trace**: FR-308, FR-309, FR-310
+  **Risk**: `--identity` is a purely local lookup key into the operator's own raw-token file — never trusted by the server, which only ever derives identity from `resolve_identity(bearer_token)` (verified, not asserted)
+  **Done**: real end-to-end approval via this exact pipeline proven for both roles (reviewer_approver via alice, release_owner via bob) **Human**: no
 
-- [ ] **T103** — [BLOCKED] Final agent-isolation launcher + its security tests
-  **Req**: — **Scn**: — **ADR**: ADR-0006 **Path**: TBD — depends on which replacement mechanism you eventually accept (Option A separate-OS-user, or an alternative)
-  **Prereq**: an accepted replacement mechanism for ADR-0006 (not yet decided) **Dep**: none **P**: no
-  **Artifact**: none yet — blocked **TDD**: n/a — blocked
-  **Validation**: n/a — no command to run until unblocked; once unblocked, this task's own Validation must include real, executed security tests proving the isolation boundary holds (not a design-only claim)
-  **Docs**: ADR-0006 "Revision 4 — Option A Spike Design" **Trace**: ADR-0006 (Rejected)
-  **Risk**: **BLOCKED — do not implement. No runtime agent subprocess may launch through this path without an accepted and verified isolation boundary.** This is distinct from T048 (already implementable — see T048's own clarification note) and T072 (subprocess timeout *durations*, also already implementable): T048 invokes the `claude` CLI using the developer's own already-authenticated session; T103 is specifically the isolated-launch boundary that would stand between an orchestration stage and any credential this project would rather not expose to it.
-  **Done**: N/A while blocked — completion criteria to be defined alongside the accepted replacement mechanism, and must include executed (not merely designed) security tests **Human**: yes — the last mandatory item before any orchestration stage that invokes a real subprocess may be considered safe to run against non-disposable credentials; must not be started by an agent under any autonomous-execution authorization
+- [x] **T102** — Enforced external-agent shutdown *(redefined 2026-09-11 from "local-secrets/ directory setup" — see note above)*
+  **Req**: — **Scn**: — **ADR**: ADR-0006 Rev. 5 **Path**: `src/orchestration/adapters/launcher.py`
+  **Prereq**: ADR-0006 Revision 5 accepted **Dep**: none **P**: no
+  **Artifact**: one centralized `launch_external_agent()` function — the sole entry point any external-agent launch would use — unconditionally raises `ExternalAgentLaunchBlocked` and records an audit event for every call, regardless of agent name or command
+  **TDD**: test-first **Validation**: `uv run pytest tests/security/test_external_agent_shutdown.py` — 6 passed
+  **Docs**: ADR-0006 Revision 5, `docs/threat-model.md` **Trace**: Human Gate 4 decision, 2026-09-11 ("MUST NOT launch Claude Code or any external agent subprocess")
+  **Risk**: proven structurally, not asserted — `test_no_unaccounted_subprocess_invocation_anywhere_in_src_or_scripts` scans the actual `src/`/`scripts/` trees and fails if any subprocess call site exists outside an explicit, justified allowlist (git worktree management, this project's own uvicorn/pytest invocations); `test_no_claude_cli_invocation_anywhere_outside_the_launcher_and_its_docs` confirms no invocation-shaped `claude` reference exists anywhere else. Built-in deterministic adapters (validators.py, live_scheduler.py's `_execute_stage_safely`) are unaffected — T102 blocks agents, not the project's own execution mechanics.
+  **Done**: 6/6 tests pass, including the two structural source-tree scans **Human**: no
 
-**Checkpoint — carries an explicit disclosed limitation forward, not a silent gap**: approval-gate *logic* (roles, revision-binding, timeout) is real and tested. Approval-gate *credential isolation* (ADR-0006) remains an accepted, documented risk, and its four concrete implementation tasks (T100–T103) are explicitly blocked, not silently dropped. Group 20 may proceed.
+- [x] **T103** — Security verification
+  **Req**: FR-307–313 **Scn**: — **ADR**: ADR-0006 Rev. 5 **Path**: `tests/security/test_t103_security_verification.py`
+  **Prereq**: T100, T101, T102 **Dep**: T100, T101, T102 **P**: no
+  **Artifact**: 15 tests covering every item the Human Gate 4 decision enumerated — unauthenticated/wrong-role/agent-identity/stale-revision rejection, valid reviewer and release-owner approval via the REAL T100/T101 pipeline (not the test-only credential-injection path used elsewhere), raw-token absence from API responses/database rows/git-tracked files/logs/subprocess environments, external-agent-launch fail-closed+audited, and structural proof no internal code path (including T106's fully-autonomous background scheduler) can manufacture a human approval record
+  **TDD**: test-first **Validation**: `uv run pytest tests/security/test_t103_security_verification.py tests/security/test_credential_provisioning.py tests/security/test_external_agent_shutdown.py` — 32 passed
+  **Docs**: `docs/threat-model.md`, ADR-0006 Revision 5, `docs/final-engineering-summary.md` **Trace**: Human Gate 4 decision, 2026-09-11
+  **Risk**: none beyond what `docs/threat-model.md` already discloses (same-OS-user compromise, a future release reintroducing agent execution)
+  **Done**: all 32 tests pass; full suite `uv run pytest tests/` → 237 passed, 0 failed **Human**: yes — this task's completion is what the release-readiness determination in `docs/final-engineering-summary.md` now cites as closing the ADR-0006 blocker
+
+**Checkpoint**: approval-gate logic AND credential isolation (via scope, not sandboxing) are both real, implemented, and tested. Group 20 may proceed — it already had, since T100–T103 were never actually on its critical path.
 
 ---
 
@@ -1294,7 +1306,7 @@ below is a new, real task, unrelated to that historical note.)
   **TDD**: test-first — HTTP-only integration test creating a workflow and observing real transitions with zero direct scheduler calls
   **Validation**: `uv run pytest tests/e2e/test_live_workflow_execution.py tests/orchestration/test_live_scheduler.py` — 4 passed
   **Docs**: docs/final-engineering-summary.md §6, §19 (updated); contracts/openapi.yaml `WorkflowCreateRequest.auto_execute` added (MINOR, additive) **Trace**: FR-201–206, this fixes the "no live HTTP-triggered execution" gap disclosed in the Final Engineering Summary
-  **Risk**: **external agent adapters remain fail-closed** — verified by grep, not just asserted: `grep -n "subprocess\|claude\|Popen" src/orchestration/live_scheduler.py` matches only the module's own docstring prose, no executable reference. The default stage executor performs only safe, built-in, in-process completion (no subprocess, no `claude` CLI invocation, no credential access); T048's real CLI wrapper and any future real adapter are deliberately NOT wired into this automatic loop while ADR-0006 remains Rejected, consistent with T100–T103 staying blocked. A real bug was caught by actually running this code (not just reading it): `evaluate_branch_conditions` sets a selected branch directly to `'ready'`, bypassing the `pending`→`ready` scan the claim loop was originally using — fixed by also claiming any already-`'ready'` stage each tick, not just newly-eligible `'pending'` ones.
+  **Risk**: **external agent adapters remain fail-closed** — verified by grep, not just asserted: `grep -n "subprocess\|claude\|Popen" src/orchestration/live_scheduler.py` matches only the module's own docstring prose, no executable reference. The default stage executor performs only safe, built-in, in-process completion (no subprocess, no `claude` CLI invocation, no credential access); T048's real CLI wrapper and any future real adapter are deliberately NOT wired into this automatic loop — **updated 2026-09-11**: ADR-0006 Revision 5 (accepted) makes this a permanent design decision for this release, not a placeholder pending T100–T103, which are now themselves implemented (see the "Unblocked 2026-09-11" section below). A real bug was caught by actually running this code (not just reading it): `evaluate_branch_conditions` sets a selected branch directly to `'ready'`, bypassing the `pending`→`ready` scan the claim loop was originally using — fixed by also claiming any already-`'ready'` stage each tick, not just newly-eligible `'pending'` ones.
   **Done**: `tests/orchestration/test_live_scheduler.py` (3 tests: full pipeline → `completed` over several ticks with the correct branch selected/skipped; policy-FAIL auto-`safe_stopped`; no duplicate claims under 8 concurrent threads) + `tests/e2e/test_live_workflow_execution.py` (1 test: `POST /workflows` with `auto_execute:true`, polled purely via `GET /workflows/{id}` — zero direct scheduler calls — reaches `completed` in <1s; audit trail and all 3 policy evaluations confirmed present) — all pass; full suite `205 passed`, stable across 3 consecutive runs **Human**: no
 
 ### Remediation Record (`/speckit-analyze` rerun, 2026-09-10)

@@ -50,7 +50,7 @@ Modular monolith (ADR-0001): domain / orchestration / policy / api / persistence
 
 Role/revision-binding logic is real and tested: `src/api/auth.py`, `src/api/routers/approvals.py`, `tests/contract/test_approvals.py` (9 tests, including the FR-313 wrong-gate-for-valid-role case, distinct from no-role-at-all). Append-only `orchestration_decision_lineage`: `src/orchestration/lineage.py`.
 
-**Fail-closed by design**: `src/api/auth.py`'s credential store is empty in any real deployment, because `scripts/bootstrap_credentials.py` and `scripts/approve.py` (T100/T101) remain BLOCKED — ADR-0006's isolation mechanism is Rejected, and building a real credential-provisioning path without it would create exactly the risk that control exists to prevent. Every real approval attempt today returns `401`. This is disclosed, not hidden — see `src/api/auth.py`'s own module docstring.
+**Real credential mechanism, implemented 2026-09-11 (ADR-0006 Revision 5, T100–T103)**: `scripts/bootstrap_credentials.py` provisions role-specific, cryptographically random 256-bit tokens; `scripts/approve.py` is a separate, human-invoked CLI that reads a raw token locally and submits a real decision. A real approval now succeeds end-to-end using this exact pipeline — proven for both roles (`tests/security/test_t103_security_verification.py::test_valid_reviewer_approval_via_real_credentials`, `test_valid_release_owner_approval_via_real_credentials`), not merely role-logic tested against a fake test-only credential. This was made safe to build by a separate, explicit Human Gate 4 decision: this prototype permanently excludes external-agent subprocess execution from its trusted boundary (`src/orchestration/adapters/launcher.py`, T102, structurally verified — see §10). This does **not** claim same-user macOS credential isolation is solved — see `docs/threat-model.md`.
 
 ## 8. Compliance and Change-Control Policy Results
 
@@ -64,9 +64,11 @@ Role/revision-binding logic is real and tested: `src/api/auth.py`, `src/api/rout
 
 ## 10. Security Controls, Findings, and Residual Risks
 
-Implemented: URL scheme allow-list (`https`/`http` only, proposed pending your final confirmation — plan.md §8), private/internal-address rejection at creation time (disclosed: no DNS-rebinding protection at resolution time), idempotency-key minimum length (16 chars), rate limiting (60 req/min/IP, `/health` exempted per the brownfield demo), a real dependency-vulnerability scan (`pip-audit` → **no known vulnerabilities found**, run 2026-09-10), and 8 malicious-input/abuse-case tests (`tests/security/test_malicious_input_abuse_cases.py`) covering SQL-injection-shaped input, path traversal, oversized payloads, null bytes, and script-URI variants — all handled safely (parameterized queries throughout, no crashes).
+Implemented: URL scheme allow-list (`https`/`http` only, proposed pending your final confirmation — plan.md §8), private/internal-address rejection at creation time (disclosed: no DNS-rebinding protection at resolution time), idempotency-key minimum length (16 chars), rate limiting (60 req/min/IP, `/health` exempted per the brownfield demo), a real dependency-vulnerability scan (`pip-audit` → **no known vulnerabilities found**), and 8+ malicious-input/abuse-case tests (`tests/security/test_malicious_input_abuse_cases.py`) covering SQL-injection-shaped input, path traversal, oversized payloads, null bytes, and script-URI variants — all handled safely (parameterized queries throughout, no crashes).
 
-**Residual/unresolved**: ADR-0006's credential-isolation mechanism (macOS `sandbox-exec` spike-FAILED; a separate-OS-user alternative was designed but never executed — no privileged command has been run in this environment). This is the single largest residual risk in the project, and it is the reason the approval surface is fail-closed rather than partially-secured.
+**Credential isolation, resolved by scope (ADR-0006 Revision 5, accepted 2026-09-11)**: this prototype permanently excludes external-agent subprocess execution from its trusted boundary. `src/orchestration/adapters/launcher.py` (T102) is the one centralized entry point any such launch would use; every call unconditionally fails closed and is audited. Verified structurally, not asserted: `tests/security/test_external_agent_shutdown.py` scans the actual `src/`/`scripts/` source trees and fails if any subprocess invocation exists outside an explicit, justified allowlist. This is what makes real credential provisioning (T100, §7) safe: there is no longer an external agent process for same-OS-user credential isolation to matter to. **This does not claim same-user macOS credential isolation is solved** — the macOS `sandbox-exec` platform failure from Revision 3 remains unresolved, not fixed; Revision 5 makes it moot for this release rather than fixing it. Full disclosed boundary: `docs/threat-model.md`.
+
+**Residual, explicitly disclosed, out of scope for this release** (from `docs/threat-model.md`): same-OS-user compromise (another process running as the same macOS user can still read the raw-token file — Unix file permissions defend against a different user, not the same one); compromise of the operator's macOS account itself; a future release that reintroduces external-agent execution (would require a new ADR revision and Human Gate decision, does not inherit Revision 5's acceptance).
 
 ## 11. Reliability, Retry, Fallback, Rollback/Compensation, and Safe-Stop
 
@@ -117,14 +119,19 @@ Full matrix: [traceability-matrix.md](traceability-matrix.md).
 
 ## 19. Known Limitations, Technical Debt, and Deferred Enhancements
 
-**Governance-blocked** (not a scope choice — T100–T103, per your explicit instruction to keep them blocked): `scripts/bootstrap_credentials.py`, `scripts/approve.py`, `local-secrets/` setup, and a final agent-isolation launcher. No runtime agent subprocess launches through a credentialed path anywhere in this codebase.
+**Previously governance-blocked, now unblocked and closed (2026-09-11, ADR-0006 Revision 5, T100–T103)**:
+- ~~`scripts/bootstrap_credentials.py`, `scripts/approve.py` BLOCKED pending ADR-0006 replacement.~~ **Implemented** — real credential provisioning + human-approval CLI (T100/T101, 11+15 tests).
+- ~~`local-secrets/` setup BLOCKED.~~ **Implemented as part of T100** — chmod-600, gitignored, real files.
+- ~~Final agent-isolation launcher BLOCKED.~~ **Implemented as T102** (redefined by the Human Gate 4 decision from "local-secrets/ setup" to "enforced external-agent shutdown") — a centralized, structurally-verified fail-closed launcher. No runtime agent subprocess launches anywhere in this codebase, by design, verified by source-tree scan, not convention alone.
 
 **Previously genuinely incomplete, now closed (2026-09-11, T104–T106)**:
 - ~~FR-202's "conditional branching based on workflow state" — never implemented or tested.~~ **Closed by T104** (`src/orchestration/branching.py`, 6 tests).
 - ~~Policy evaluation is not wired into the live `/workflows` request path.~~ **Closed by T105** (`src/policy/live.py`, 13 tests; SC-006 now demonstrated live).
 - ~~No background worker automatically drives the DAG end-to-end via HTTP alone.~~ **Closed by T106** (`src/orchestration/live_scheduler.py`, 4 tests including one real bug — a branch-selected stage bypassing the claim loop's `'pending'`-only scan — caught by actually running the code and fixed before commit).
 
-**Deferred, disclosed as legitimate `READY WITH ACCEPTED LIMITATIONS` candidates** (never mandatory FRs): egress network restriction for agent subprocesses, DNS-rebinding protection at redirect-resolution time, a cryptographically tamper-evident audit log, containerized deployment.
+**Explicitly, permanently out of scope for this release (disclosed, not silently assumed)** — see `docs/threat-model.md`: same-OS-user compromise of the credential files; compromise of the operator's macOS account; a future release reintroducing external-agent execution (would require its own new ADR revision and Human Gate decision).
+
+**Deferred, disclosed as legitimate `READY WITH ACCEPTED LIMITATIONS` candidates** (never mandatory FRs, and — for the first item — now largely moot since no agent subprocess exists in this release at all): egress network restriction for agent subprocesses, DNS-rebinding protection at redirect-resolution time, a cryptographically tamper-evident audit log, containerized deployment.
 
 ## 20. Repository Paths, Reproducible Commands, and Reviewer Verification Points
 

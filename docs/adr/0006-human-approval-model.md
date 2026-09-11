@@ -2,6 +2,21 @@
 
 ## Status
 
+**Revision 5 ACCEPTED by explicit Human Gate 4 decision (2026-09-11).** See
+"Revision 5 — Scope-Limited Acceptance (Accepted, 2026-09-11)" near the end
+of this file for the full decision, its exact boundary, and the real,
+implemented, tested mechanism (T100–T103). Revisions 1–4 below are
+preserved for the record — they document the credential-*isolation*
+mechanism this project spent three rounds trying and failing to make safe
+for an *external agent subprocess*, and the honest platform-level failure
+(macOS `sandbox-exec`) that made Revision 3 unacceptable. Revision 5 does
+**not** resolve that failure — it makes it moot for this release by
+removing external-agent subprocess execution from the trusted boundary
+entirely, a different and narrower claim. Read Revision 5's own Context
+section before assuming anything below still describes the shipped system.
+
+---
+
 **Revision 3 REJECTED by explicit Human Gate 4 decision (2026-09-10).** The
 human candidate rejected Revision 3 as written: its primary mechanism
 (macOS `sandbox-exec`) failed a direct feasibility spike on the actual
@@ -456,3 +471,123 @@ under the current provisioning — this is a **separate, disclosed gap**
 (a credential decision, not an isolation-mechanism flaw), and provisioning
 one would itself require your explicit future authorization, distinct from
 this spike.
+
+---
+
+## Revision 5 — Scope-Limited Acceptance (Accepted, 2026-09-11)
+
+### Human Gate 4 Decision
+
+Verbatim scope, as directed: "Adopt a scope-limited Revision 5 for this
+prototype. The released prototype MUST NOT launch Claude Code or any
+external agent subprocess. External-agent execution remains fail-closed.
+The implemented orchestration demonstration will use controlled built-in
+adapters only. This decision does not claim that same-user macOS
+credential isolation was solved. It removes that unverified execution
+path from the prototype's trusted boundary."
+
+### What This Decision Actually Does
+
+Revisions 1–4 all tried to answer the same question: *if an external agent
+subprocess (Claude Code or similar) runs as part of this orchestration
+engine, how do we stop that subprocess from reading human-approval
+credentials it should never see?* Every mechanism tried (gitignore
+convention, a single-path sandbox deny rule, a full-protected-asset
+sandbox boundary, a separate-OS-user spike) either failed a direct
+feasibility test (macOS `sandbox-exec` — confirmed `SIGABRT`, Revision 3)
+or was never executed (Option A — no privileged command was ever run).
+
+Revision 5 does not answer that question. It makes the question not
+apply to this release, by removing its premise: **no external agent
+subprocess is ever launched by this prototype, full stop** — enforced by
+`src/orchestration/adapters/launcher.py`, the one centralized entry point
+any such launch would have to go through, which unconditionally raises
+`ExternalAgentLaunchBlocked` and records an audit event for every call,
+regardless of agent name or command (T102). This is verified structurally,
+not just asserted: `tests/security/test_external_agent_shutdown.py` scans
+the actual `src/` and `scripts/` trees and fails if any subprocess
+invocation appears outside an explicit, justified allowlist (git worktree
+management, this project's own uvicorn/pytest invocations — never an
+agent).
+
+With that premise removed, the original credential-isolation problem — protecting
+a raw human-approval token from an agent process reading it — has no agent
+process left to protect it *from*. This is what makes real credential
+provisioning (T100) safe to build now, where it wasn't before.
+
+### What This Decision Does NOT Claim
+
+- It does **not** claim same-user macOS credential isolation is solved.
+  Anything else running as the same OS user as this prototype (a
+  malicious local process, a compromised dependency, another application)
+  can still read `local-secrets/approval_tokens.raw.json` — nothing in
+  T100–T103 defends against that. See `docs/threat-model.md`.
+- It does **not** claim sandboxing of any kind. No Seatbelt profile, no
+  container, no separate OS user was implemented. The macOS `sandbox-exec`
+  failure from Revision 3 is unresolved and irrelevant here, not fixed.
+- It does **not** claim protection against compromise of the operator's
+  macOS account. If the account is compromised, everything on it is
+  compromised, including this prototype's credentials — this is normal for
+  any local development tool and is explicitly out of scope, not a novel
+  risk this decision introduces.
+- It does **not** extend to any future release that reintroduces external-
+  agent execution. Re-adding a real adapter behind
+  `src/orchestration/adapters/launcher.py` would require a new ADR
+  revision and a new Human Gate decision — Revision 5's acceptance is
+  scoped to "no external agent subprocess," not "credential handling is
+  solved in general."
+
+### Implementation (T100–T103)
+
+- **T100** (`src/api/credentials.py`, `scripts/bootstrap_credentials.py`):
+  cryptographically random per-identity tokens (`secrets.token_urlsafe(32)`,
+  256 bits of entropy), salted SHA-256 hashes stored in a local, gitignored
+  config file (`local-secrets/approval_tokens.hashed.json`, chmod 600); raw
+  tokens written once to a separate gitignored file
+  (`local-secrets/approval_tokens.raw.json`, chmod 600) and printed to
+  stdout exactly once at creation time, never again.
+- **T101** (`scripts/approve.py`): a separate, human-invoked CLI that reads
+  the raw token locally (same OS user, same machine — this is exactly the
+  boundary Revision 5 does not extend past) and submits it as a Bearer
+  token to the real approval endpoint. The server never trusts a
+  caller-supplied identity — only what `src/api/auth.py::resolve_identity`
+  derives from verifying the token against the hash store (FR-308).
+- **T102** (`src/orchestration/adapters/launcher.py`): the centralized
+  fail-closed launcher described above.
+- **T103**: comprehensive verification —
+  `tests/security/test_t103_security_verification.py` (15 tests) plus
+  `tests/security/test_credential_provisioning.py` (11 tests) and
+  `tests/security/test_external_agent_shutdown.py` (6 tests). Covers
+  unauthenticated/wrong-role/agent-identity/stale-revision rejection, valid
+  reviewer and release-owner approval via the real T100/T101 pipeline (not
+  just the test-only credential-injection path used elsewhere in this
+  suite), raw-token absence from API responses/database rows/git-tracked
+  files/logs/subprocess environments, external-agent-launch fail-closed
+  auditing, and structural proof that no internal code path (including the
+  fully-autonomous T106 background scheduler) can manufacture a human
+  approval record for itself.
+
+### Revised Constitution Check
+
+| Principle | Status under Revision 5 |
+|---|---|
+| III. Human Governance | **PASS** — real approval mechanism, verified-credential identity, agent identities unconditionally rejected, revision-binding real and tested |
+| V. Security and Privacy by Design | **PASS, scope-limited** — least privilege and explicit trust boundaries are real for the boundary this release actually has (no external agent execution); same-OS-user isolation for a hypothetical external agent remains unaddressed because that agent no longer exists in this release's trusted boundary, not because the principle was waived |
+
+### Traceability
+
+FR-307, FR-308, FR-309, FR-310, FR-311, FR-312, FR-313 (all now genuinely
+implemented against real credentials, not only role-logic tested against
+fake ones). Supersedes Revision 3's Rejected status and Revision 4's
+never-executed Option A spike design — neither is resurrected or
+completed; Revision 5 is a different, narrower decision, not a
+continuation of that unresolved thread.
+
+### Validation
+
+`uv run pytest tests/security/test_credential_provisioning.py
+tests/security/test_external_agent_shutdown.py
+tests/security/test_t103_security_verification.py` — 32 tests, all real,
+all passing. Full suite, fresh-clone re-verification, and repository
+secret/hygiene scan results are recorded in
+`docs/final-engineering-summary.md`.
