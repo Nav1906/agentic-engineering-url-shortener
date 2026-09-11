@@ -29,11 +29,11 @@
 | FR | Requirement | Task(s) | Code | Test | Status |
 |---|---|---|---|---|---|
 | FR-201 | Explicit dependency graph | T045,T056 | `src/orchestration/models.py`, `scheduler.py` | `tests/orchestration/test_eligibility.py` | Implemented, tested |
-| FR-202 | Sequential/parallel/sync/**conditional branching** | T057 | `src/orchestration/scheduler.py` | `tests/orchestration/test_parallel_sync.py` | **Partial** — sequential/parallel/sync real+tested; conditional branching NOT implemented |
+| FR-202 | Sequential/parallel/sync/conditional branching | T057,T104 | `scheduler.py`, `src/orchestration/branching.py` | `test_parallel_sync.py`, `test_conditional_branching.py` (6 tests) | **Implemented, tested** (2026-09-11 — was Partial; T104 closed the conditional-branching gap) |
 | FR-203 | Per-stage inputs/outputs/entry/exit/actor/failure, inspectable before running | T045 | `src/orchestration/models.py` | `tests/orchestration/test_eligibility.py` (indirect) | Implemented; no dedicated pre-execution-inspection test |
 | FR-204 | Persist state/context/provenance/lineage across interruption | T045,T063,T077 | `models.py`, `lineage.py`, `scheduler.recover_on_startup` | `tests/persistence/test_restart_recovery.py` | Implemented, tested |
 | FR-205 | Controlled resumption from persisted state | T077 | `src/orchestration/scheduler.py` | `tests/persistence/test_restart_recovery.py` | Implemented, tested |
-| FR-206 | Workflow creation + inspection as independent capabilities | T045 | `src/api/routers/workflows.py` | `tests/contract/test_workflows.py` | Implemented, tested |
+| FR-206 | Workflow creation + inspection as independent capabilities | T045,T106 | `src/api/routers/workflows.py`, `live_scheduler.py` | `tests/contract/test_workflows.py`, `tests/e2e/test_live_workflow_execution.py` | Implemented, tested — a workflow created via `auto_execute:true` now progresses to `completed` automatically, driven purely by the HTTP API |
 
 ## Human Governance (FR-301–313)
 
@@ -41,10 +41,10 @@
 |---|---|---|---|---|---|
 | FR-301 | Mandatory gate list, never bypassed | T065–069 | `src/api/routers/approvals.py` | `tests/contract/test_approvals.py` | Implemented (fail-closed, §7 of summary), tested |
 | FR-302 | Gate decision recorded as approved/rejected/timed-out, never inferred | T069 | `src/orchestration/scheduler.py` (timeout scaffolding) | `tests/orchestration/test_safe_stop.py` (adjacent) | Implemented; dedicated live timeout test not present |
-| FR-303 | Policy outcome + version recorded, exactly one per check | T051 | `src/policy/evaluator.py` | `tests/policy/test_evaluator.py` | Implemented, tested |
+| FR-303 | Policy outcome + version recorded, exactly one per check | T051,T105 | `evaluator.py`, `src/policy/live.py` | `test_evaluator.py`, `test_live_policy_evaluation.py` (13 tests) | Implemented, tested — now runs automatically per live workflow (2026-09-11), not just unit-tested |
 | FR-304 | FAIL blocks downstream progression | T052 | `src/policy/evaluator.py` + `scheduler.py` eligibility | `tests/integration/test_cross_package_flow.py::test_policy_fail_blocks_downstream_across_packages` | Implemented, tested |
 | FR-305 | Exception record, all required fields | T053 | `src/policy/exception.py` | `tests/policy/test_exception.py` | Implemented, tested |
-| FR-306 | Material change → impact analysis + approval | T055 | `src/orchestration/replanning.py` | `tests/orchestration/test_change_detection.py` | Implemented, tested |
+| FR-306 | Material change → impact analysis + approval | T055,T105 | `replanning.py`, `src/policy/live.py::_check_change_control` | `test_change_detection.py`, `test_live_policy_evaluation.py` | Implemented, tested — live check now blocks a workflow automatically when a declared material change lacks a succeeded impact-analysis stage |
 | FR-307 | Reject unauthenticated / wrong-role attempts | T065 | `src/api/auth.py`, `approvals.py` | `tests/contract/test_approvals.py` | Implemented, tested |
 | FR-308 | Identity from verified credential, never caller-supplied name | T066 | `src/api/auth.py` | `tests/contract/test_approvals.py` | Implemented (fail-closed posture, §7); tested via TEST-ONLY credential registration |
 | FR-309 | Agent identity unconditionally rejected | T067 | `src/api/auth.py::reject_if_agent` | `tests/contract/test_approvals.py::test_agent_identity_rejected_unconditionally` | Implemented, tested |
@@ -92,6 +92,8 @@
 | SC-003 | Any audited claim traces to a real artifact/command | This matrix + `docs/final-engineering-summary.md` | Yes |
 | SC-004 | Recovery duration measurable (no numeric target) | `tests/observability/test_mttr.py` | Yes (definitional only, as required) |
 | SC-005 | Reject at gate → distinct non-approved terminal state | `tests/contract/test_approvals.py` | Yes |
-| SC-006 | 100% mandatory policy checks recorded with version, live | `tests/policy/test_evaluator.py` | **Partial** — proven in isolation, not yet demonstrated on a live `/workflows` run (policy engine not yet wired into the request path) |
+| SC-006 | 100% mandatory policy checks recorded with version, live | `tests/e2e/test_live_workflow_execution.py` (confirms 3/3 policy evaluations via `GET /workflows/{id}/policy-evaluations`), `scripts/demo_greenfield.py` (`is_release_ready: True`) | **Yes** (2026-09-11 — was Partial; T105 wired policy evaluation into live workflow execution) |
 
-**Spot-check**: 10 random FR IDs (FR-105, FR-202, FR-308, FR-402, FR-501, FR-602, FR-107, FR-313, FR-062→FR-606, FR-401) were traced end-to-end from this matrix to their cited code and test files during generation — all resolved to real, existing files; no orphans found. FR-202 is the one confirmed partial/incomplete row, disclosed accurately rather than marked complete.
+**Spot-check**: 10 random FR IDs (FR-105, FR-202, FR-308, FR-402, FR-501, FR-602, FR-107, FR-313, FR-062→FR-606, FR-401) were traced end-to-end from this matrix to their cited code and test files during generation — all resolved to real, existing files; no orphans found. FR-202 was the one confirmed partial/incomplete row at that time, disclosed accurately rather than marked complete.
+
+**Update (2026-09-11)**: FR-202 and SC-006 — the two rows honestly marked Partial above — are now closed. T104 (conditional workflow branching), T105 (live policy evaluation), and T106 (automatic background workflow execution from the HTTP API) were added and implemented specifically to close them; see `docs/final-engineering-summary.md` §21 for the updated release-readiness disposition. `tests/e2e/test_live_workflow_execution.py` is the single test that most directly demonstrates all three together: it creates a workflow purely via HTTP, observes real automatic progression (T106) through a conditional branch (T104) gated by live-evaluated mandatory policies (T105), reaching `completed` with zero direct scheduler calls.

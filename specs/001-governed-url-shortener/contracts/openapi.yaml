@@ -435,6 +435,18 @@ components:
           type: string
           enum: [greenfield, brownfield, ambiguous]
           nullable: true
+        auto_execute:
+          type: boolean
+          default: false
+          description: >-
+            T106, added 2026-09-11 (MINOR, additive, backward-compatible --
+            existing callers omitting this field are unaffected). When
+            true, seeds a minimal demo pipeline (intake -> classify ->
+            conditional branch, FR-202/T104) that the in-process background
+            scheduler (src/orchestration/live_scheduler.py) drives
+            automatically to completion, with no direct scheduler calls
+            required from the caller. External agent adapters remain
+            fail-closed regardless of this flag -- see ADR-0006.
 
     WorkflowStage:
       type: object

@@ -7,8 +7,10 @@ from fastapi import APIRouter, HTTPException
 
 from src.api.schemas import ErrorResponse, WorkflowCreateRequest, WorkflowInstance, WorkflowStage
 from src.observability.audit import record_event
+from src.orchestration.branching import add_conditional_branch
 from src.orchestration.lineage import get_lineage
 from src.orchestration.models import (
+    add_stage,
     create_workflow_instance,
     get_dependencies,
     get_stages,
@@ -17,6 +19,25 @@ from src.orchestration.models import (
 from src.persistence.db import get_connection
 
 router = APIRouter()
+
+
+def _seed_auto_execute_pipeline(conn, workflow_id: str) -> None:
+    """T106: a minimal, real, deterministic demo pipeline -- intake ->
+    classify -> {proceed_path, hold_path} (conditional branch, T104) --
+    for the background scheduler (src/orchestration/live_scheduler.py) to
+    drive automatically. Opt-in via `auto_execute: true` so ordinary
+    workflow creation (no scenario-specific decomposition implied by a
+    bare requirement string) keeps returning stages=[] as before."""
+    intake = add_stage(conn, workflow_id, "intake")
+    classify = add_stage(conn, workflow_id, "classify", depends_on=[intake])
+    add_conditional_branch(
+        conn, workflow_id, "proceed_path", classify, "outcome_branch",
+        {"field": "decision", "op": "eq", "value": "proceed"},
+    )
+    add_conditional_branch(
+        conn, workflow_id, "hold_path", classify, "outcome_branch",
+        {"field": "decision", "op": "eq", "value": "hold"},
+    )
 
 
 @router.post("/workflows", response_model=WorkflowInstance, status_code=201)
@@ -29,6 +50,13 @@ def create_workflow(body: WorkflowCreateRequest):
             conn, "system", "create_workflow", f"workflow:{workflow_id}", "created",
             f"ingested requirement: {body.requirement!r}", workflow_instance_id=workflow_id,
         )
+        if body.auto_execute:
+            _seed_auto_execute_pipeline(conn, workflow_id)
+            record_event(
+                conn, "system", "auto_execute_pipeline_seeded", f"workflow:{workflow_id}", "seeded",
+                "intake -> classify -> conditional branch pipeline seeded for the background scheduler",
+                workflow_instance_id=workflow_id,
+            )
         return _serialize(conn, workflow_id)
     finally:
         conn.close()

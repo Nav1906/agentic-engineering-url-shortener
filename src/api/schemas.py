@@ -45,6 +45,7 @@ class HealthStatus(BaseModel):
 class WorkflowCreateRequest(BaseModel):
     requirement: str
     scenario: Literal["greenfield", "brownfield", "ambiguous"] | None = None
+    auto_execute: bool = False
 
 
 class WorkflowStage(BaseModel):

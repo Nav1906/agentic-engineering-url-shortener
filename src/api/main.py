@@ -1,5 +1,7 @@
 """FastAPI app entrypoint (T007). Startup gate: a marker-write failure MUST
-prevent request-serving, not just log a warning (T038)."""
+prevent request-serving, not just log a warning (T038). T106: also runs
+crash recovery and starts/stops the in-process background scheduler here,
+so a workflow created through the HTTP API progresses automatically."""
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -7,6 +9,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.observability import system_status
+from src.orchestration import live_scheduler
+from src.orchestration.scheduler import recover_on_startup
 from src.persistence.db import get_connection, init_schema
 
 
@@ -19,9 +23,17 @@ async def lifespan(app: FastAPI):
         # FastAPI's lifespan context propagates the exception, which uvicorn
         # treats as a failed startup (no "Application startup complete").
         system_status.on_startup(conn)
+        # T106 restart recovery: any stage left 'running' from a prior,
+        # uncleanly-terminated process is forced to failed_transient before
+        # the background scheduler starts claiming new work.
+        recover_on_startup(conn)
     finally:
         conn.close()
+
+    live_scheduler.start()  # T106: clean startup, periodic scheduling begins
     yield
+    await live_scheduler.stop()  # T106: graceful shutdown before the process exits
+
     conn = get_connection()
     try:
         system_status.on_clean_shutdown(conn)

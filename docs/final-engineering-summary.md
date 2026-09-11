@@ -1,12 +1,12 @@
 # Final Engineering Summary: Governed URL Shortener
 
-**Generated**: 2026-09-11, after `/speckit-implement` (T001–T099 of 103; T100–T103 remain governance-blocked). This summary was generated before an independent convergence/final-assessment pass (`/speckit-converge`) has run — it reflects the implementer's own evidence-based account, not an independent reviewer's sign-off. Every claim below cites a repository path, a command, and an actual result; nothing here is asserted without that.
+**Generated**: 2026-09-11, after `/speckit-implement` (T001–T099 of 103). **Updated 2026-09-11** after T104–T106 closed the three genuinely-incomplete engineering gaps this summary originally disclosed (conditional branching, live policy wiring, live HTTP-triggered execution) — see §6, §8, §19, §21. T100–T103 remain governance-blocked, unchanged. This summary was generated before an independent convergence/final-assessment pass (`/speckit-converge`) has run — it reflects the implementer's own evidence-based account, not an independent reviewer's sign-off. Every claim below cites a repository path, a command, and an actual result; nothing here is asserted without that.
 
 ## 1. Executive Engineering Outcome and Release-Readiness Status
 
 **NOT READY** for unqualified release, under the corrected rule in [plan.md § Planning Constraints](../specs/001-governed-url-shortener/plan.md): `READY` is withheld while any mandatory requirement, control, or validation step remains incomplete, regardless of delivery-sequence bucket.
 
-The system is a real, working, extensively tested URL shortener with a real orchestration engine (dependency graph, atomic claiming, parallel dispatch, reaper/reconciliation, retry/fallback/safe-stop, dynamic replanning, isolated-worktree promotion, executable postcondition validators) and real policy/audit/approval subsystems. **184 tests pass** (`uv run pytest tests/`), verified in a fresh clone (§20). What blocks `READY`: ADR-0006's credential-isolation mechanism remains Rejected, so the human-approval surface is deliberately fail-closed and cannot currently authorize a real approval (§7); and several specific items (§19) are genuinely incomplete, not merely undemonstrated. See §21 for the full disposition.
+The system is a real, working, extensively tested URL shortener with a real orchestration engine (dependency graph, atomic claiming, parallel dispatch, conditional branching, reaper/reconciliation, retry/fallback/safe-stop, dynamic replanning, isolated-worktree promotion, executable postcondition validators, and — as of T106 — automatic background execution driven purely through the HTTP API) and real policy/audit/approval subsystems, with mandatory policy checks now wired into live workflow execution (T105). **205 tests pass** (`uv run pytest tests/`), verified in a fresh clone (§20). The three engineering gaps this summary originally disclosed as "genuinely incomplete" (§19) are now closed. What still blocks `READY`: ADR-0006's credential-isolation mechanism remains Rejected, so the human-approval surface is deliberately fail-closed and cannot currently authorize a real approval (§7) — on the stricter reading Constitution Principle V requires, this is an incomplete mandatory security requirement, not merely a disclosed nice-to-have gap. See §21 for the full disposition.
 
 ## 2. Project Objective, Scope, and 2–3-Day Timebox Outcome
 
@@ -42,9 +42,9 @@ Modular monolith (ADR-0001): domain / orchestration / policy / api / persistence
 - Isolated per-execution git worktrees + controller-only promotion: `workspace.py`, `test_worktree_promotion.py`
 - Executable postcondition validators, persisted evidence: `validators.py`, `test_postcondition_validators.py`
 - Dynamic replanning / invalidation cascade: `replanning.py`, `test_replanning_cascade.py`, `test_replan_worktree_invalidation.py`
-- Crash recovery on restart: `scheduler.recover_on_startup`, `tests/persistence/test_restart_recovery.py`
-
-**Not yet wired**: a background worker that automatically drives the DAG against a live `/workflows`-submitted requirement end-to-end via HTTP alone (§19).
+- Crash recovery on restart: `scheduler.recover_on_startup`, `tests/persistence/test_restart_recovery.py`, now wired into `src/api/main.py`'s lifespan (T106) so it actually runs before the live scheduler starts, not only reachable in tests
+- **Conditional branching (T104, closes FR-202's one gap)**: `branching.py` — a branch's condition is evaluated only against its parent stage's own persisted outcome, never live external state; only `'pending'` branch stages are ever touched, proven restart-safe by an explicit test. `tests/orchestration/test_conditional_branching.py` (6 tests)
+- **Automatic background execution from the HTTP API (T106)**: `live_scheduler.py`, started/stopped by `src/api/main.py`'s lifespan. `POST /workflows` with `auto_execute: true` (additive, opt-in) now progresses to `completed` with zero direct scheduler calls — `tests/e2e/test_live_workflow_execution.py` polls purely via HTTP and observes real transitions through a conditional branch gated by live policy evaluation. External agent adapters remain fail-closed: the loop's only stage-execution path is safe, built-in, in-process completion — verified by grep, not just asserted (`grep -n "subprocess\|claude\|Popen" src/orchestration/live_scheduler.py` matches only the module's own docstring prose).
 
 ## 7. Human Approvals, Governance Gates, and Decision Lineage
 
@@ -54,9 +54,9 @@ Role/revision-binding logic is real and tested: `src/api/auth.py`, `src/api/rout
 
 ## 8. Compliance and Change-Control Policy Results
 
-`src/policy/` (manifest, evaluator, exception workflow) — real and tested (`tests/policy/`, 12 tests). All 4 outcomes (`PASS`/`FAIL`/`EXCEPTION-REQUESTED`/`NOT-APPLICABLE`) producible, each with a recorded policy version. `FAIL`-blocks-downstream proven mechanically via the scheduler's own eligibility query (`tests/integration/test_cross_package_flow.py::test_policy_fail_blocks_downstream_across_packages`), not a separately-enforced rule that could drift.
+`src/policy/` (manifest, evaluator, exception workflow) — real and tested (`tests/policy/`, 25 tests including T105's). All 4 outcomes (`PASS`/`FAIL`/`EXCEPTION-REQUESTED`/`NOT-APPLICABLE`) producible, each with a recorded policy version. `FAIL`-blocks-downstream proven mechanically via the scheduler's own eligibility query (`tests/integration/test_cross_package_flow.py::test_policy_fail_blocks_downstream_across_packages`), not a separately-enforced rule that could drift.
 
-**Not yet wired**: no policy check currently runs automatically as part of a live `/workflows` request — the module is real and tested standalone, not yet invoked by the orchestration engine's own execution path (§19).
+**Now wired live (T105, closes the previously-disclosed gap)**: `src/policy/live.py::run_mandatory_policy_checks` runs automatically for every workflow the background scheduler (T106) picks up — three real, fast, local, deterministic checks (lockfile freshness, decision-lineage-based change-control, a structural release-readiness placeholder), each persisted with the `workflow_instance_id` AND `artifact_revision` it applies to (schema addition: `policy_evaluation.artifact_revision`). `is_release_ready()` treats a policy evaluation made against a now-stale revision as equivalent to never evaluated — not silently trusted. `scripts/demo_greenfield.py` now demonstrates this live (`is_release_ready: True`), and `tests/e2e/test_live_workflow_execution.py` confirms all 3 mandatory policies ran automatically on a real HTTP-created workflow — SC-006 is now demonstrated end-to-end, not just unit-tested.
 
 ## 9. Policy Exceptions, Compensating Controls, Expiry, and Approvals
 
@@ -99,12 +99,13 @@ Definition (ADR-0008, `src/observability/metrics.py::compute_mttr_seconds`): pop
 | Unit (T087) | `uv run pytest tests/unit/ --cov=src/domain --cov=src/api` | 32 passed |
 | Contract (T088) | `uv run pytest tests/contract/` | 38 passed |
 | Integration (T089) | `uv run pytest tests/integration/` | 2 passed |
-| Orchestration (T090) | `uv run pytest tests/orchestration/` | 57 passed |
+| Orchestration (T090) | `uv run pytest tests/orchestration/` | 66 passed (was 57 — +9 from T104/T106) |
 | Security (T091) | `uv run pytest tests/security/` | 10 passed |
-| End-to-end (T092) | `uv run pytest tests/e2e/` | 4 passed |
-| **Full suite** | `uv run pytest tests/` | **184 passed, 0 failed** |
-| Type check | `uv run mypy src/` | Success, no issues, 42 source files |
-| Lint | `uv run ruff check src/ tests/` | All checks passed |
+| End-to-end (T092) | `uv run pytest tests/e2e/` | 5 passed (was 4 — +1, T106's live HTTP integration test) |
+| Policy | `uv run pytest tests/policy/` | 24 passed (was 12 — +13 from T105) |
+| **Full suite** | `uv run pytest tests/` | **205 passed, 0 failed** (stable across 3 consecutive runs) |
+| Type check | `uv run mypy src/` | Success, no issues, 45 source files |
+| Lint | `uv run ruff check src/ tests/ scripts/` | All checks passed |
 | OpenAPI | `openapi-spec-validator .../openapi.yaml` | OK |
 | Dependency scan | `pip-audit` | No known vulnerabilities found |
 
@@ -118,21 +119,21 @@ Full matrix: [traceability-matrix.md](traceability-matrix.md).
 
 **Governance-blocked** (not a scope choice — T100–T103, per your explicit instruction to keep them blocked): `scripts/bootstrap_credentials.py`, `scripts/approve.py`, `local-secrets/` setup, and a final agent-isolation launcher. No runtime agent subprocess launches through a credentialed path anywhere in this codebase.
 
-**Genuinely incomplete** (not merely undemonstrated):
-- FR-202's "conditional branching based on workflow state" — never implemented or tested. Sequential, parallel, and synchronization are real; conditional branching is not.
-- Policy evaluation is not wired into the live `/workflows` request path (§8) — real and tested standalone only.
-- No background worker automatically drives the DAG end-to-end via HTTP alone (§6) — the mechanics are real and exercised directly and via the three scenario scripts, not via a single live API call yet.
+**Previously genuinely incomplete, now closed (2026-09-11, T104–T106)**:
+- ~~FR-202's "conditional branching based on workflow state" — never implemented or tested.~~ **Closed by T104** (`src/orchestration/branching.py`, 6 tests).
+- ~~Policy evaluation is not wired into the live `/workflows` request path.~~ **Closed by T105** (`src/policy/live.py`, 13 tests; SC-006 now demonstrated live).
+- ~~No background worker automatically drives the DAG end-to-end via HTTP alone.~~ **Closed by T106** (`src/orchestration/live_scheduler.py`, 4 tests including one real bug — a branch-selected stage bypassing the claim loop's `'pending'`-only scan — caught by actually running the code and fixed before commit).
 
 **Deferred, disclosed as legitimate `READY WITH ACCEPTED LIMITATIONS` candidates** (never mandatory FRs): egress network restriction for agent subprocesses, DNS-rebinding protection at redirect-resolution time, a cryptographically tamper-evident audit log, containerized deployment.
 
 ## 20. Repository Paths, Reproducible Commands, and Reviewer Verification Points
 
-See [reviewer-navigation-guide.md](reviewer-navigation-guide.md) for the full path-by-path index. Headline reproduction: `uv sync && uv run pytest tests/` (184 passed), `bash scripts/smoke.sh` (live golden path), `uv run python3 scripts/demo_{greenfield,brownfield,ambiguous}.py` (all three PASSED). **All of the above were re-verified in a disposable fresh clone** (local `git clone`, not pushed anywhere) on 2026-09-11, confirming no reliance on uncommitted local state — installed from the committed `uv.lock`, produced identical results (184 passed, mypy/ruff clean, OpenAPI OK, all three demos PASSED), and the disposable clone directory was removed afterward.
+See [reviewer-navigation-guide.md](reviewer-navigation-guide.md) for the full path-by-path index. Headline reproduction: `uv sync && uv run pytest tests/` (205 passed), `bash scripts/smoke.sh` (live golden path), `uv run python3 scripts/demo_{greenfield,brownfield,ambiguous}.py` (all three PASSED). New: `POST /workflows` with `{"auto_execute": true}`, then poll `GET /workflows/{id}` — reaches `completed` automatically within ~1s. **All of the above were re-verified in a disposable fresh clone** (local `git clone`, not pushed anywhere), most recently on 2026-09-11 after T104–T106 — confirming no reliance on uncommitted local state, installed from the committed `uv.lock`, identical results, disposable clone directory removed afterward each time.
 
 ## 21. Final Engineering Judgment, Unresolved Blockers, and Recommended Next Actions
 
-This is a substantially real, substantially tested governed orchestration system — not a facade. The domain layer, persistence layer, and the specific orchestration mechanics the assessment names explicitly (explicit dependency graph, genuine parallel execution with synchronization, atomic claiming under real concurrency, lease-based recovery, effect reconciliation, bounded retry/fallback/rollback-compensation/safe-stop, dynamic replanning, isolated-worktree promotion, executable postconditions) are all real code with real, passing tests — not narrative claims.
+This is a substantially real, substantially tested governed orchestration system — not a facade. The domain layer, persistence layer, and the specific orchestration mechanics the assessment names explicitly (explicit dependency graph, genuine parallel execution with synchronization, conditional branching, atomic claiming under real concurrency, lease-based recovery, effect reconciliation, bounded retry/fallback/rollback-compensation/safe-stop, dynamic replanning, isolated-worktree promotion, executable postconditions, automatic background execution triggered purely via HTTP) are all real code with real, passing tests — not narrative claims. The three engineering gaps disclosed earlier in this same summary are now closed, not merely re-labeled.
 
-**Unresolved blockers**: (1) ADR-0006's credential-isolation mechanism — no path forward exists until you accept a replacement (Option A execution, or an alternative); this is a human decision, not an engineering one. (2) The three genuinely-incomplete items in §19 (conditional branching, live policy wiring, live DAG-execution trigger) are engineering work, not governance-blocked, and could be picked up in a further session.
+**Unresolved blockers**: ADR-0006's credential-isolation mechanism — no path forward exists until you accept a replacement (Option A execution, or an alternative); this is a human decision, not an engineering one. On the stricter reading Constitution Principle V ("least privilege and explicit trust boundaries MUST be used" — a non-negotiable Core Principle) requires, this is more accurately an **incomplete mandatory security requirement** than a disclosed nice-to-have gap, since ADR-0006 is the specific mechanism meant to satisfy that principle for the credential-handling boundary.
 
-**Recommendation**: do not represent this system as `READY`. `READY WITH ACCEPTED LIMITATIONS` becomes available once the §19 "genuinely incomplete" items are closed — ADR-0006 alone would already be a legitimate accepted-limitation candidate on its own, consistent with plan.md's own release-readiness rule, but the other gaps currently prevent that determination from being reached.
+**Recommendation**: do not represent this system as `READY`. With the three engineering gaps closed, ADR-0006/T100–T103 is now the *only* remaining blocker — but it is a governance decision reserved for you, not something a further engineering session can close unilaterally. `READY WITH ACCEPTED LIMITATIONS` becomes available only once you've made and recorded that specific decision (accept a replacement mechanism, or explicitly accept the current fail-closed posture as sufficient for this assessment's scope) — it should not be inferred or self-granted.

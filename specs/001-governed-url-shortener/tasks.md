@@ -1287,15 +1287,15 @@ below is a new, real task, unrelated to that historical note.)
   **Risk**: the 3 automatic per-workflow checks are real, fast, local, and deterministic (lockfile mtime, decision-lineage inspection) — deliberately NOT re-running the slow, network-based `pip-audit` scan per workflow; that remains the separate T044 release-readiness-time check
   **Done**: all 13 tests pass; `scripts/demo_greenfield.py` shows `is_release_ready: True` for a live workflow **Human**: no
 
-- [ ] **T106** — Automatic background workflow execution from the HTTP API
+- [x] **T106** — Automatic background workflow execution from the HTTP API
   **Req**: FR-201–206 **Scn**: US2 **ADR**: ADR-0005 **Path**: `src/orchestration/live_scheduler.py`
   **Prereq**: T104, T105, T058 (atomic claim), T059 (reaper) **Dep**: T104, T105 **P**: no
-  **Artifact**: an asyncio background tick loop started/stopped by `src/api/main.py`'s lifespan
+  **Artifact**: an asyncio background tick loop started/stopped by `src/api/main.py`'s lifespan; `WorkflowCreateRequest.auto_execute` (additive, opt-in — existing callers unaffected, `stages=[]` behavior preserved for ordinary creation)
   **TDD**: test-first — HTTP-only integration test creating a workflow and observing real transitions with zero direct scheduler calls
-  **Validation**: `uv run pytest tests/e2e/test_live_workflow_execution.py tests/orchestration/test_live_scheduler.py`
-  **Docs**: docs/final-engineering-summary.md §6, §19 (updated) **Trace**: FR-201–206, this fixes the "no live HTTP-triggered execution" gap disclosed in the Final Engineering Summary
-  **Risk**: **external agent adapters remain fail-closed** — this loop's default stage executor performs only safe, built-in, in-process completion (no subprocess, no `claude` CLI invocation, no credential access); T048's real CLI wrapper and any future real adapter are deliberately NOT wired into this automatic loop while ADR-0006 remains Rejected, consistent with T100–T103 staying blocked
-  **Done**: see this task group's own commit for exact test counts and the HTTP-integration-test result **Human**: no
+  **Validation**: `uv run pytest tests/e2e/test_live_workflow_execution.py tests/orchestration/test_live_scheduler.py` — 4 passed
+  **Docs**: docs/final-engineering-summary.md §6, §19 (updated); contracts/openapi.yaml `WorkflowCreateRequest.auto_execute` added (MINOR, additive) **Trace**: FR-201–206, this fixes the "no live HTTP-triggered execution" gap disclosed in the Final Engineering Summary
+  **Risk**: **external agent adapters remain fail-closed** — verified by grep, not just asserted: `grep -n "subprocess\|claude\|Popen" src/orchestration/live_scheduler.py` matches only the module's own docstring prose, no executable reference. The default stage executor performs only safe, built-in, in-process completion (no subprocess, no `claude` CLI invocation, no credential access); T048's real CLI wrapper and any future real adapter are deliberately NOT wired into this automatic loop while ADR-0006 remains Rejected, consistent with T100–T103 staying blocked. A real bug was caught by actually running this code (not just reading it): `evaluate_branch_conditions` sets a selected branch directly to `'ready'`, bypassing the `pending`→`ready` scan the claim loop was originally using — fixed by also claiming any already-`'ready'` stage each tick, not just newly-eligible `'pending'` ones.
+  **Done**: `tests/orchestration/test_live_scheduler.py` (3 tests: full pipeline → `completed` over several ticks with the correct branch selected/skipped; policy-FAIL auto-`safe_stopped`; no duplicate claims under 8 concurrent threads) + `tests/e2e/test_live_workflow_execution.py` (1 test: `POST /workflows` with `auto_execute:true`, polled purely via `GET /workflows/{id}` — zero direct scheduler calls — reaches `completed` in <1s; audit trail and all 3 policy evaluations confirmed present) — all pass; full suite `205 passed`, stable across 3 consecutive runs **Human**: no
 
 ### Remediation Record (`/speckit-analyze` rerun, 2026-09-10)
 
